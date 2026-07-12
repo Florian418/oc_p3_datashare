@@ -20,9 +20,11 @@ repositories {
 
 dependencies {
 	implementation platform(SpringBootPlugin.BOM_COORDINATES)
+	implementation platform('software.amazon.awssdk:bom:2.47.4')
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'software.amazon.awssdk:s3'
 	developmentOnly platform(SpringBootPlugin.BOM_COORDINATES)
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
