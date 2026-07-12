@@ -3,6 +3,7 @@ import org.springframework.boot.gradle.plugin.SpringBootPlugin
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.1.0'
+	id 'jacoco'
 }
 
 group = 'fr.euflow'
@@ -64,7 +65,20 @@ tasks.named('bootRun') {
 	environment(loadEnvFile())
 }
 
+jacoco {
+	toolVersion = "0.8.15"
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 	environment(loadEnvFile())
+	finalizedBy jacocoTestReport
+}
+
+tasks.named('jacocoTestReport') {
+	dependsOn test
+	reports {
+		xml.required = true
+		html.required = true
+	}
 }
