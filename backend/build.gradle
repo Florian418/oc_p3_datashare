@@ -21,6 +21,7 @@ repositories {
 dependencies {
 	implementation platform(SpringBootPlugin.BOM_COORDINATES)
 	implementation platform('software.amazon.awssdk:bom:2.47.4')
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
@@ -41,6 +42,28 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+def loadEnvFile() {
+	def envFile = file('.env')
+	def env = [:]
+	if (envFile.exists()) {
+		envFile.eachLine { line ->
+			line = line.trim()
+			if (line && !line.startsWith('#')) {
+				def separatorIndex = line.indexOf('=')
+				if (separatorIndex > 0) {
+					env[line.substring(0, separatorIndex).trim()] = line.substring(separatorIndex + 1).trim()
+				}
+			}
+		}
+	}
+	return env
+}
+
+tasks.named('bootRun') {
+	environment(loadEnvFile())
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
+	environment(loadEnvFile())
 }
