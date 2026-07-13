@@ -16,9 +16,14 @@ export type ButtonSize = 'small' | 'medium';
     </button>
   `,
   styles: `
+    :host {
+      display: contents;
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       flex-shrink: 0;
       gap: 8px;
       border-radius: 8px;
@@ -28,6 +33,11 @@ export type ButtonSize = 'small' | 'medium';
       font-weight: 400;
       white-space: nowrap;
       cursor: pointer;
+    }
+
+    .btn--full-width {
+      display: flex;
+      width: 100%;
     }
 
     .btn--small {
@@ -100,6 +110,9 @@ export class Button {
   size = input<ButtonSize>('medium');
   type = input<'button' | 'submit'>('button');
   disabled = input(false);
+  fullWidth = input(false);
 
-  protected classes = computed(() => `btn btn--${this.variant()} btn--${this.size()}`);
+  protected classes = computed(
+    () => `btn btn--${this.variant()} btn--${this.size()}${this.fullWidth() ? ' btn--full-width' : ''}`,
+  );
 }

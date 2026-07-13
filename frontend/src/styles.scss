@@ -1,6 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 
 @use '@fontsource-variable/dm-sans';
+@use '@fontsource-variable/inter';
 
 :root {
   --color-primary: #ff812d;
@@ -42,8 +43,12 @@
   --color-switch-selected-text: #ffffff;
 
   --font-family-base: 'DM Sans Variable', sans-serif;
+  --font-family-sans: 'Inter Variable', sans-serif;
+
+  --color-danger: #f14343;
 }
 
 body {
-  font-family: var(--font-family-base);
+  margin: 0;
+  font-family: var(--font-family-sans);
 }
