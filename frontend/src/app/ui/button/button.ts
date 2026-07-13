@@ -1,19 +1,32 @@
 import { Component, computed, input } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'dark';
 export type ButtonSize = 'small' | 'medium';
 
 @Component({
   selector: 'app-button',
+  imports: [NgTemplateOutlet, RouterLink],
   template: `
-    <button [type]="type()" [class]="classes()" [disabled]="disabled()">
+    <ng-template #content>
       <span class="btn__icon" aria-hidden="true">
         <ng-content select="[slot=icon]" />
       </span>
       <span class="btn__label">
         <ng-content />
       </span>
-    </button>
+    </ng-template>
+
+    @if (routerLink(); as link) {
+      <a [routerLink]="link" [class]="classes()">
+        <ng-container [ngTemplateOutlet]="content" />
+      </a>
+    } @else {
+      <button [type]="type()" [class]="classes()" [disabled]="disabled()">
+        <ng-container [ngTemplateOutlet]="content" />
+      </button>
+    }
   `,
   styles: `
     :host {
@@ -32,6 +45,7 @@ export type ButtonSize = 'small' | 'medium';
       font-size: 16px;
       font-weight: 400;
       white-space: nowrap;
+      text-decoration: none;
       cursor: pointer;
     }
 
@@ -111,6 +125,7 @@ export class Button {
   type = input<'button' | 'submit'>('button');
   disabled = input(false);
   fullWidth = input(false);
+  routerLink = input<string | undefined>(undefined);
 
   protected classes = computed(
     () => `btn btn--${this.variant()} btn--${this.size()}${this.fullWidth() ? ' btn--full-width' : ''}`,

@@ -10,7 +10,7 @@ import { Button } from '../button/button';
       @if (loggedIn()) {
         <app-button variant="dark" size="medium">Mon espace</app-button>
       } @else {
-        <app-button variant="dark" size="medium">Se connecter</app-button>
+        <app-button variant="dark" size="medium" routerLink="/login">Se connecter</app-button>
       }
     </header>
   `,

@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { Header } from '../../ui/header/header';
+import { Footer } from '../../ui/footer/footer';
 import { Button } from '../../ui/button/button';
 import { Input } from '../../ui/input/input';
 import { Select, SelectOption } from '../../ui/select/select';
@@ -8,7 +9,7 @@ type UploadState = 'vide' | 'ajoute' | 'erreur' | 'succes';
 
 @Component({
   selector: 'app-upload',
-  imports: [Header, Button, Input, Select],
+  imports: [Header, Footer, Button, Input, Select],
   template: `
     <div class="upload">
       <app-header />
@@ -118,9 +119,7 @@ type UploadState = 'vide' | 'ajoute' | 'erreur' | 'succes';
       </div>
 
       @if (state() === 'vide' || state() === 'succes') {
-        <footer class="upload__footer">
-          <div class="upload__footer-inner">Copyright DataShare© 2025</div>
-        </footer>
+        <app-footer />
       }
     </div>
   `,
@@ -314,23 +313,7 @@ type UploadState = 'vide' | 'ajoute' | 'erreur' | 'succes';
       color: #d8640b;
     }
 
-    .upload__footer {
-      display: none;
-    }
-
-    .upload__footer-inner {
-      box-sizing: border-box;
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 16px;
-      text-align: left;
-      font-family: var(--font-family-sans);
-      font-size: 16px;
-      line-height: 24px;
-      color: #ffffff;
-    }
-
-    /* --- Desktop : carte centrée flottante, pas de bottom-sheet, footer visible --- */
+    /* --- Desktop : carte centrée flottante, pas de bottom-sheet --- */
     @media (min-width: 768px) {
       .upload__card {
         position: static;
@@ -341,10 +324,6 @@ type UploadState = 'vide' | 'ajoute' | 'erreur' | 'succes';
 
       .upload__card--success {
         width: 544px;
-      }
-
-      .upload__footer {
-        display: block;
       }
     }
   `,
