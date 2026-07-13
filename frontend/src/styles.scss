@@ -1,1 +1,49 @@
 /* You can add global styles to this file, and also import other style files */
+
+@use '@fontsource-variable/dm-sans';
+
+:root {
+  --color-primary: #ff812d;
+  --color-primary-bg: rgb(255 129 45 / 13%);
+  --color-primary-border: rgb(205 94 20 / 50%);
+  --color-primary-text: #ba681f;
+
+  --color-secondary-border: #ffa569;
+  --color-secondary-text: #e27f29;
+
+  --color-dark-bg: #2c2c2c;
+  --color-dark-text: #f3eeea;
+
+  --color-disabled-bg: rgb(183 167 156 / 20%);
+  --color-disabled-dark-bg: #f4eee9;
+  --color-disabled-text: #aea49b;
+
+  --color-input-bg: #ffffff;
+  --color-input-border: #d9d9d9;
+  --color-input-placeholder: #b3b3b3;
+  --color-select-text: #1e1e1e;
+
+  --color-callout-info-bg: #e2ecff;
+  --color-callout-info-border: #b1c9f5;
+  --color-callout-info-text: #2a3f72;
+
+  --color-callout-alert-bg: #fff5ed;
+  --color-callout-alert-border: #e6cbb5;
+  --color-callout-alert-text: #aa642b;
+
+  --color-callout-error-bg: #ffe2e2;
+  --color-callout-error-border: #e8a6a6;
+  --color-callout-error-text: #9c3333;
+
+  --color-switch-bg: rgb(255 193 145 / 16%);
+  --color-switch-border: rgb(215 99 11 / 20%);
+  --color-switch-text: #000000;
+  --color-switch-selected-bg: #e77a6e;
+  --color-switch-selected-text: #ffffff;
+
+  --font-family-base: 'DM Sans Variable', sans-serif;
+}
+
+body {
+  font-family: var(--font-family-base);
+}
