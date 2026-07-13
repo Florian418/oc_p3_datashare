@@ -39,6 +39,10 @@ testem.log
 /typings
 __screenshots__/
 
+# Lighthouse (rapports générés localement pendant les audits perf/a11y)
+*.report.html
+/test-results
+
 # System files
 .DS_Store
 Thumbs.db
