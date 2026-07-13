@@ -8,7 +8,7 @@ import { Button } from '../button/button';
     <header class="header">
       <a class="header__logo" href="/">DataShare</a>
       @if (loggedIn()) {
-        <app-button variant="dark" size="medium">Mon espace</app-button>
+        <app-button variant="dark" size="medium" routerLink="/my-space">Mon espace</app-button>
       } @else {
         <app-button variant="dark" size="medium" routerLink="/login">Se connecter</app-button>
       }

@@ -16,6 +16,9 @@ export type ButtonSize = 'small' | 'medium';
       <span class="btn__label">
         <ng-content />
       </span>
+      <span class="btn__icon" aria-hidden="true">
+        <ng-content select="[slot=icon-end]" />
+      </span>
     </ng-template>
 
     @if (routerLink(); as link) {
