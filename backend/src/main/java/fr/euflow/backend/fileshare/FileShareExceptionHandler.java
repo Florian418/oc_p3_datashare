@@ -43,4 +43,9 @@ public class FileShareExceptionHandler {
     public ProblemDetail handleShareExpired(ShareExpiredException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.GONE, ex.getMessage());
     }
+
+    @ExceptionHandler({SharePasswordMismatchException.class, InvalidAccessTokenException.class})
+    public ProblemDetail handleShareAccessDenied(RuntimeException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
 }

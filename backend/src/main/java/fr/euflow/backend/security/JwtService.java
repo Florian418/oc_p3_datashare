@@ -36,11 +36,24 @@ public class JwtService {
      * @return le token compact ({@code header.payload.signature}) et sa date d'expiration
      */
     public GeneratedToken generateToken(String subject) {
+        return generateToken(subject, expiration);
+    }
+
+    /**
+     * Génère un JWT signé pour le sujet donné, valide pour la durée fournie — utilisé pour des
+     * tokens à durée de vie différente du JWT de connexion (ex. le token d'accès éphémère US02,
+     * quelques dizaines de secondes).
+     *
+     * @param subject identifiant du porteur du token
+     * @param ttl durée de validité du token
+     * @return le token compact ({@code header.payload.signature}) et sa date d'expiration
+     */
+    public GeneratedToken generateToken(String subject, Duration ttl) {
         Instant now = Instant.now();
         // tronqué à la seconde : le claim JWT "exp" n'encode que des secondes (RFC 7519,
         // NumericDate) — sans ça, expiresAt() renverrait une valeur plus précise que ce que
         // le token contient réellement.
-        Instant expiresAt = now.plus(expiration).truncatedTo(ChronoUnit.SECONDS);
+        Instant expiresAt = now.plus(ttl).truncatedTo(ChronoUnit.SECONDS);
         String value = Jwts.builder()
                 .subject(subject)
                 .issuedAt(Date.from(now))

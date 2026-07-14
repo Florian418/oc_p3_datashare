@@ -35,4 +35,13 @@ class JwtServiceTests {
         assertEquals(token.expiresAt(), claims.getExpiration().toInstant());
         assertTrue(claims.getExpiration().toInstant().isAfter(Instant.now()));
     }
+
+    @Test
+    void generateToken_withCustomTtl_usesThatDurationInsteadOfTheDefault() {
+        JwtService.GeneratedToken token = jwtService.generateToken("share-token", Duration.ofSeconds(90));
+
+        Instant expected = Instant.now().plusSeconds(90);
+        assertTrue(Duration.between(token.expiresAt(), expected).abs().getSeconds() < 2);
+        assertEquals("share-token", jwtService.extractSubject(token.value()));
+    }
 }
