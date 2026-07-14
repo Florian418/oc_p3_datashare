@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
+import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
@@ -33,6 +35,13 @@ public class S3ClientConfig {
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(properties.accessKey(), properties.secretKey())))
                 .forcePathStyle(true)
+                // Garage ne supporte pas le mode de signature "streaming avec trailer de
+                // checksum" devenu la valeur par défaut du SDK AWS récent (uploads en
+                // InputStream) — sans ce réglage, tout PutObject échoue avec "Invalid payload
+                // signature". WHEN_REQUIRED revient à l'ancien mode de signature (chunked SigV4
+                // classique), toujours en flux, sans charger le fichier entier en mémoire.
+                .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
+                .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)
                 .build();
     }
 }

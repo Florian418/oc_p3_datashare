@@ -33,6 +33,7 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
+	implementation 'org.apache.tika:tika-core:3.3.0'
 	developmentOnly platform(SpringBootPlugin.BOM_COORDINATES)
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
@@ -86,3 +87,4 @@ tasks.named('jacocoTestReport') {
 		html.required = true
 	}
 }
+
