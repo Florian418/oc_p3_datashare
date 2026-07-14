@@ -33,4 +33,14 @@ public class FileShareExceptionHandler {
     public ProblemDetail handleInvalidUpload(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
+
+    @ExceptionHandler(ShareNotFoundException.class)
+    public ProblemDetail handleShareNotFound(ShareNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(ShareExpiredException.class)
+    public ProblemDetail handleShareExpired(ShareExpiredException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.GONE, ex.getMessage());
+    }
 }

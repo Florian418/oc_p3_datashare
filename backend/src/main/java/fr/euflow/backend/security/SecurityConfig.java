@@ -56,6 +56,8 @@ public class SecurityConfig {
                         // route reste publique, FileShareService lit lui-même le contexte de
                         // sécurité pour savoir si un utilisateur est authentifié
                         .requestMatchers(HttpMethod.POST, "/api/v1/files").permitAll()
+                        // US02 : accès public par token, jamais de JWT requis
+                        .requestMatchers("/api/v1/shares/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
