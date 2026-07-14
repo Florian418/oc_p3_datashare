@@ -21,7 +21,7 @@ export interface SelectOption {
         (change)="value.set($any($event.target).value)"
       >
         @for (option of options(); track option.value) {
-          <option [value]="option.value">{{ option.label }}</option>
+          <option [value]="option.value" [selected]="option.value === value()">{{ option.label }}</option>
         }
       </select>
       <svg class="select__chevron" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.36569 0.234315C1.05327 -0.078105 0.546734 -0.078105 0.234315 0.234315C-0.078105 0.546734 -0.078105 1.05327 0.234315 1.36568L4.23431 5.36569C4.54673 5.67811 5.05327 5.67811 5.36569 5.36569L9.36569 1.36568C9.67811 1.05327 9.67811 0.546734 9.36569 0.234315C9.05327 -0.078105 8.54673 -0.078105 8.23431 0.234315L4.8 3.66862L1.36569 0.234315L1.36569 0.234315Z" fill="currentColor" fill-rule="evenodd" transform="translate(3.2 5.2)" /></svg>
