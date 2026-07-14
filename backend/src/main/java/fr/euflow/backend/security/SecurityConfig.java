@@ -8,6 +8,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * Configuration transverse de sécurité : API 100% stateless (JWT Bearer, jamais de cookie
@@ -19,21 +20,30 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     /**
+     * @param jwtAuthenticationFilter pose l'{@code Authentication} dans le contexte de
+     *         sécurité à partir du JWT Bearer, sans jamais rejeter directement une requête
+     * @param jwtAuthenticationEntryPoint renvoie le 401 (RFC 7807) quand une route protégée
+     *         est appelée sans authentification valide
      * @return la chaîne de filtres de sécurité : CSRF désactivé et session stateless (pas de
      *         cookie, cohérent avec une API 100% JWT Bearer), routes techniques et
      *         {@code /api/v1/auth/**} publiques, le reste authentifié par défaut
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // API stateless (JWT Bearer à venir, jamais de cookie de session) : le CSRF protège les flux
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) throws Exception {
+        // API stateless (JWT Bearer, jamais de cookie de session) : le CSRF protège les flux
         // basés sur les cookies, il n'a pas de sens ici et bloquerait les POST sans jeton dédié.
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(handling -> handling.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .anyRequest().authenticated());
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

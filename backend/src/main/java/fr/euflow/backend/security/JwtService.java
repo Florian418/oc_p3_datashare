@@ -1,5 +1,8 @@
 package fr.euflow.backend.security;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
@@ -12,8 +15,7 @@ import java.util.Base64;
 import java.util.Date;
 
 /**
- * Émet des JWT signés (HMAC) pour authentifier les appels aux endpoints protégés.
- * Ne s'occupe que de la génération — la vérification/le filtre arrivent au commit suivant.
+ * Émet et vérifie des JWT signés (HMAC) pour authentifier les appels aux endpoints protégés.
  */
 @Service
 public class JwtService {
@@ -46,6 +48,29 @@ public class JwtService {
                 .signWith(key)
                 .compact();
         return new GeneratedToken(value, expiresAt);
+    }
+
+    /**
+     * Vérifie la signature et l'expiration d'un token, et en extrait le sujet.
+     *
+     * @param token le token JWT compact à vérifier
+     * @return le sujet encodé dans le token (l'email de l'utilisateur)
+     * @throws io.jsonwebtoken.ExpiredJwtException si le token est expiré (signature par
+     *         ailleurs valide) — catchée séparément par l'appelant, qui distingue ce cas
+     *         des autres échecs de validation
+     * @throws io.jsonwebtoken.JwtException si la signature est invalide ou le token malformé
+     * @throws IllegalArgumentException si le token est vide ou {@code null}
+     */
+    public String extractSubject(String token) {
+        JwtParser parser = Jwts.parser()
+                .verifyWith(key)
+                .build();
+
+        // vérifie signature + expiration, lève une exception si l'une des deux est invalide
+        Jws<Claims> signedToken = parser.parseSignedClaims(token);
+        Claims claims = signedToken.getPayload();
+
+        return claims.getSubject();
     }
 
     /**
