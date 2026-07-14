@@ -141,7 +141,7 @@ class ShareControllerTests {
 
         var result = mockMvc.perform(get("/api/v1/shares/{token}/download", fileShare.getToken()))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Content-Disposition", "attachment; filename*=UTF-8''hello.txt"))
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"hello.txt\"; filename*=UTF-8''hello.txt"))
                 .andReturn();
 
         assertArrayEquals(content, result.getResponse().getContentAsByteArray());

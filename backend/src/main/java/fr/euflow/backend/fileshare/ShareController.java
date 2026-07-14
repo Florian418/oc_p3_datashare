@@ -58,9 +58,10 @@ public class ShareController {
     }
 
     /**
-     * Télécharge le contenu réel du fichier — étape 2 (US02/US09). Le nom de fichier est
-     * encodé en UTF-8 (RFC 6266) plutôt que simplement échappé, pour rester correct avec des
-     * noms de fichiers contenant des caractères non-ASCII (accents, etc.).
+     * Télécharge le contenu réel du fichier — étape 2 (US02/US09). Le nom de fichier est fourni
+     * sous les deux formes recommandées par la RFC 6266 : {@code filename} (repli ASCII, pour
+     * les navigateurs qui ignorent la forme étendue — WebKit/Safari notamment, testé en e2e) et
+     * {@code filename*} (UTF-8, pour rester correct avec des caractères non-ASCII).
      *
      * @param token token public du partage
      * @param accessToken token d'accès éphémère, requis seulement si le partage est protégé
@@ -76,12 +77,14 @@ public class ShareController {
             @PathVariable String token,
             @RequestParam(value = "access_token", required = false) String accessToken) {
         ShareDownload download = shareService.download(token, accessToken);
+        String asciiFallbackFilename = download.filename().replaceAll("[^\\x20-\\x7E]", "_").replace("\"", "'");
         String encodedFilename = URLEncoder.encode(download.filename(), StandardCharsets.UTF_8).replace("+", "%20");
+        String contentDisposition = "attachment; filename=\"" + asciiFallbackFilename + "\"; filename*=UTF-8''" + encodedFilename;
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(download.mimeType()))
                 .contentLength(download.size())
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFilename)
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
                 .body(new InputStreamResource(download.content()));
     }
 }
