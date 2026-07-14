@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { seedAuthSession } from './auth-session';
 
-const routes = ['/', '/login', '/register', '/download', '/my-space'];
+const routes = ['/', '/login', '/register', '/download/00000000-0000-0000-0000-000000000000', '/my-space'];
 
 const viewports = {
   desktop: { width: 1440, height: 1024 },

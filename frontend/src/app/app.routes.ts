@@ -10,6 +10,6 @@ export const routes: Routes = [
   { path: '', component: Upload },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
-  { path: 'download', component: Download },
+  { path: 'download/:token', component: Download },
   { path: 'my-space', component: MySpace, canActivate: [authGuard] },
 ];
