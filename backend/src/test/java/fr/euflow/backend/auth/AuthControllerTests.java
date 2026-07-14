@@ -90,4 +90,56 @@ class AuthControllerTests {
                         .content(payload))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void login_withValidCredentials_returns200AndToken() throws Exception {
+        registerUser("dave@example.com", "s3cret!");
+        String payload = objectMapper.writeValueAsString(new LoginRequest("dave@example.com", "s3cret!"));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.expiresAt").isNotEmpty());
+    }
+
+    @Test
+    void login_withWrongPassword_returns401() throws Exception {
+        registerUser("erin@example.com", "s3cret!");
+        String payload = objectMapper.writeValueAsString(new LoginRequest("erin@example.com", "wrong-password"));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void login_withUnknownEmail_returns401() throws Exception {
+        String payload = objectMapper.writeValueAsString(new LoginRequest("unknown@example.com", "s3cret!"));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void login_withInvalidEmail_returns400() throws Exception {
+        String payload = objectMapper.writeValueAsString(new LoginRequest("not-an-email", "s3cret!"));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest());
+    }
+
+    private void registerUser(String email, String password) throws Exception {
+        String payload = objectMapper.writeValueAsString(new RegisterRequest(email, password));
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isCreated());
+    }
 }
