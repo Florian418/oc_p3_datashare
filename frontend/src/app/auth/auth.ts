@@ -30,6 +30,7 @@ export class Auth {
   private session = signal<AuthSession | null>(readStoredSession());
 
   isLoggedIn = computed(() => this.session() !== null);
+  token = computed(() => this.session()?.token ?? null);
 
   register(request: RegisterRequest) {
     return this.http.post<void>(`${environment.apiUrl}/auth/register`, request);
