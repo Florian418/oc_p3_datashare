@@ -1,15 +1,19 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Header } from '../../ui/header/header';
 import { Footer } from '../../ui/footer/footer';
 import { Button } from '../../ui/button/button';
 import { Input } from '../../ui/input/input';
+import { Callout } from '../../ui/callout/callout';
+import { Auth } from '../../auth/auth';
 
 /**
- * Écran Connexion (US04) — statique pour l'instant, pas encore câblé sur l'API réelle.
+ * Écran Connexion (US04) — authentifie via `POST /auth/login` et démarre la session.
  */
 @Component({
   selector: 'app-login',
-  imports: [Header, Footer, Button, Input],
+  imports: [Header, Footer, Button, Input, Callout],
   template: `
     <div class="auth">
       <app-header />
@@ -18,25 +22,31 @@ import { Input } from '../../ui/input/input';
         <div class="auth__card">
           <h1 class="auth__title">Connexion</h1>
 
-          <form class="auth__form">
+          @if (errorMessage(); as message) {
+            <app-callout type="error">{{ message }}</app-callout>
+          } @else if (accountCreated()) {
+            <app-callout type="info">Votre compte a bien été créé, vous pouvez vous connecter.</app-callout>
+          }
+
+          <form class="auth__form" (submit)="onSubmit($event)">
             <label class="auth__field">
               <span class="auth__field-label">Email</span>
-              <app-input type="email" placeholder="Saisissez votre email..." />
+              <app-input type="email" placeholder="Saisissez votre email..." [(value)]="email" />
             </label>
             <label class="auth__field">
               <span class="auth__field-label">Mot de passe</span>
-              <app-input type="password" placeholder="Saisissez votre mot de passe..." />
+              <app-input type="password" placeholder="Saisissez votre mot de passe..." [(value)]="password" />
             </label>
-          </form>
 
-          <div class="auth__actions">
-            <app-button variant="tertiary" size="medium" [fullWidth]="true" routerLink="/register">
-              Créer un compte
-            </app-button>
-            <app-button variant="primary" size="medium" type="submit" [fullWidth]="true">
-              Connexion
-            </app-button>
-          </div>
+            <div class="auth__actions">
+              <app-button variant="tertiary" size="medium" [fullWidth]="true" routerLink="/register">
+                Créer un compte
+              </app-button>
+              <app-button variant="primary" size="medium" type="submit" [fullWidth]="true" [disabled]="submitting()">
+                Connexion
+              </app-button>
+            </div>
+          </form>
         </div>
       </div>
 
@@ -109,4 +119,28 @@ import { Input } from '../../ui/input/input';
     }
   `,
 })
-export class Login {}
+export class Login {
+  private auth = inject(Auth);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  protected email = signal('');
+  protected password = signal('');
+  protected errorMessage = signal<string | null>(null);
+  protected submitting = signal(false);
+  protected accountCreated = signal(this.route.snapshot.queryParamMap.get('registered') === 'true');
+
+  protected onSubmit(event: Event): void {
+    event.preventDefault();
+    this.errorMessage.set(null);
+    this.submitting.set(true);
+
+    this.auth.login({ email: this.email(), password: this.password() }).subscribe({
+      next: () => this.router.navigateByUrl('/my-space'),
+      error: (error: HttpErrorResponse) => {
+        this.submitting.set(false);
+        this.errorMessage.set(error.error?.detail ?? 'Une erreur est survenue, réessayez.');
+      },
+    });
+  }
+}

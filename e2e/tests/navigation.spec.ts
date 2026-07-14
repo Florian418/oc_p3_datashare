@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { seedAuthSession } from './auth-session';
 
 test('Téléversement → Connexion → Créer un compte → Connexion', async ({ page }) => {
   await page.goto('/');
@@ -17,6 +18,7 @@ test('Téléversement → Connexion → Créer un compte → Connexion', async (
 });
 
 test('Mon espace → Ajouter des fichiers → Téléversement', async ({ page }) => {
+  await seedAuthSession(page);
   await page.goto('/my-space');
 
   await page.getByRole('link', { name: 'Ajouter des fichiers' }).click();

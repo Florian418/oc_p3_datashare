@@ -1,10 +1,12 @@
-import { Component, input } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Button } from '../button/button';
+import { Auth } from '../../auth/auth';
 
 /**
  * En-tête du site — logo + bouton d'action qui bascule "Se connecter"/"Mon espace" selon
- * `loggedIn`. Les 4 variantes de la maquette (desktop/mobile × anonyme/connecté) sont
- * structurellement identiques, le responsive vient du flexbox sans component séparé.
+ * l'état d'authentification courant ({@link Auth}). Les 4 variantes de la maquette
+ * (desktop/mobile × anonyme/connecté) sont structurellement identiques, le responsive vient
+ * du flexbox sans component séparé.
  */
 @Component({
   selector: 'app-header',
@@ -12,7 +14,7 @@ import { Button } from '../button/button';
   template: `
     <header class="header">
       <a class="header__logo" href="/">DataShare</a>
-      @if (loggedIn()) {
+      @if (auth.isLoggedIn()) {
         <app-button variant="dark" size="medium" routerLink="/my-space">Mon espace</app-button>
       } @else {
         <app-button variant="dark" size="medium" routerLink="/login">Se connecter</app-button>
@@ -41,5 +43,5 @@ import { Button } from '../button/button';
   `,
 })
 export class Header {
-  loggedIn = input(false);
+  protected auth = inject(Auth);
 }
