@@ -9,6 +9,11 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+/**
+ * Implémentation {@link FileStorageService} qui délègue à Garage via le SDK S3 — le seul
+ * endroit du code qui connaît concrètement S3/Garage, le reste de l'application ne manipule
+ * que l'interface.
+ */
 @Service
 public class S3FileStorageService implements FileStorageService {
 

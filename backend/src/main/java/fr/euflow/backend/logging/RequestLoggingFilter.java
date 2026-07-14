@@ -12,6 +12,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * Logue chaque requête HTTP en une ligne JSON structurée (méthode, chemin, statut, durée) —
+ * s'exécute une seule fois par requête ({@link OncePerRequestFilter}), quel que soit
+ * l'endpoint appelé.
+ */
 @Component
 public class RequestLoggingFilter extends OncePerRequestFilter {
 

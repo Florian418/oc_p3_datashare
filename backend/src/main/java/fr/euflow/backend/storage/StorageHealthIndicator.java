@@ -6,6 +6,11 @@ import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 
+/**
+ * Étend le healthcheck Actuator au stockage Garage — Actuator ne connaît nativement que le
+ * {@code DataSource}, rien pour un {@link S3Client} maison. Vérifie l'accessibilité du
+ * bucket configuré via un simple {@code HEAD}.
+ */
 @Component
 public class StorageHealthIndicator implements HealthIndicator {
 

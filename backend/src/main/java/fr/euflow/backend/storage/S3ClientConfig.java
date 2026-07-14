@@ -10,10 +10,21 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
+/**
+ * Fabrique le client S3 (SDK AWS) utilisé pour parler à Garage plutôt qu'à la vraie AWS —
+ * un seul {@link S3Client}, construit une fois au démarrage, réutilisé par tout le code de
+ * stockage.
+ */
 @Configuration
 @EnableConfigurationProperties(StorageProperties.class)
 public class S3ClientConfig {
 
+    /**
+     * @param properties config Garage résolue depuis {@code datashare.storage.*}
+     * @return le client S3 paramétré pour Garage : endpoint custom (sinon il irait taper
+     *         {@code amazonaws.com}) et {@code forcePathStyle} (Garage n'a pas de DNS
+     *         virtuel par bucket)
+     */
     @Bean
     public S3Client s3Client(StorageProperties properties) {
         return S3Client.builder()

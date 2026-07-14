@@ -23,6 +23,13 @@ public class AuthController {
         this.authService = authService;
     }
 
+    /**
+     * Crée un compte utilisateur.
+     *
+     * @param request email + mot de passe en clair
+     * @return 201 avec les informations publiques du compte créé
+     * @throws EmailAlreadyUsedException si l'email est déjà utilisé (409)
+     */
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         User user = authService.register(request);

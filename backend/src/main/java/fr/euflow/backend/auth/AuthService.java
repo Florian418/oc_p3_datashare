@@ -24,6 +24,16 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
+    /**
+     * Crée un compte utilisateur : vérifie l'unicité de l'email, hache le mot de passe puis
+     * sauvegarde.
+     *
+     * @param request email + mot de passe en clair
+     * @return l'utilisateur persisté (id et date de création générés)
+     * @throws EmailAlreadyUsedException si l'email est déjà utilisé — vérifié en amont via
+     *         {@link fr.euflow.backend.user.UserRepository#existsByEmail}, puis en dernier
+     *         recours par la contrainte {@code UNIQUE} en base en cas de requêtes concurrentes
+     */
     public User register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new EmailAlreadyUsedException(request.email());

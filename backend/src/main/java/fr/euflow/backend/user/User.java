@@ -10,6 +10,9 @@ import jakarta.persistence.Table;
 
 import java.time.Instant;
 
+/**
+ * Entité JPA mappée sur la table {@code users} (compte utilisateur, US03/US04).
+ */
 @Entity
 @Table(name = "users")
 public class User {
