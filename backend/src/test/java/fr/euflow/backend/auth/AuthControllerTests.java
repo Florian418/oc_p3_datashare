@@ -42,7 +42,7 @@ class AuthControllerTests {
 
     @Test
     void register_withValidPayload_createsUserAndReturns201() throws Exception {
-        String payload = objectMapper.writeValueAsString(new RegisterRequest("alice@example.com", "s3cret!"));
+        String payload = objectMapper.writeValueAsString(new RegisterRequest("alice@example.com", "s3cret!!"));
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -52,12 +52,12 @@ class AuthControllerTests {
                 .andExpect(jsonPath("$.email").value("alice@example.com"));
 
         var saved = userRepository.findByEmail("alice@example.com").orElseThrow();
-        assertTrue(passwordEncoder.matches("s3cret!", saved.getUserPasswordHash()));
+        assertTrue(passwordEncoder.matches("s3cret!!", saved.getUserPasswordHash()));
     }
 
     @Test
     void register_withAlreadyUsedEmail_returns409() throws Exception {
-        String payload = objectMapper.writeValueAsString(new RegisterRequest("bob@example.com", "s3cret!"));
+        String payload = objectMapper.writeValueAsString(new RegisterRequest("bob@example.com", "s3cret!!"));
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -73,7 +73,7 @@ class AuthControllerTests {
 
     @Test
     void register_withInvalidEmail_returns400() throws Exception {
-        String payload = objectMapper.writeValueAsString(new RegisterRequest("not-an-email", "s3cret!"));
+        String payload = objectMapper.writeValueAsString(new RegisterRequest("not-an-email", "s3cret!!"));
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -93,8 +93,8 @@ class AuthControllerTests {
 
     @Test
     void login_withValidCredentials_returns200AndToken() throws Exception {
-        registerUser("dave@example.com", "s3cret!");
-        String payload = objectMapper.writeValueAsString(new LoginRequest("dave@example.com", "s3cret!"));
+        registerUser("dave@example.com", "s3cret!!");
+        String payload = objectMapper.writeValueAsString(new LoginRequest("dave@example.com", "s3cret!!"));
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -106,7 +106,7 @@ class AuthControllerTests {
 
     @Test
     void login_withWrongPassword_returns401() throws Exception {
-        registerUser("erin@example.com", "s3cret!");
+        registerUser("erin@example.com", "s3cret!!");
         String payload = objectMapper.writeValueAsString(new LoginRequest("erin@example.com", "wrong-password"));
 
         mockMvc.perform(post("/api/v1/auth/login")
@@ -117,7 +117,7 @@ class AuthControllerTests {
 
     @Test
     void login_withUnknownEmail_returns401() throws Exception {
-        String payload = objectMapper.writeValueAsString(new LoginRequest("unknown@example.com", "s3cret!"));
+        String payload = objectMapper.writeValueAsString(new LoginRequest("unknown@example.com", "s3cret!!"));
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -127,7 +127,7 @@ class AuthControllerTests {
 
     @Test
     void login_withInvalidEmail_returns400() throws Exception {
-        String payload = objectMapper.writeValueAsString(new LoginRequest("not-an-email", "s3cret!"));
+        String payload = objectMapper.writeValueAsString(new LoginRequest("not-an-email", "s3cret!!"));
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
