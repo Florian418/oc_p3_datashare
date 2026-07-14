@@ -15,6 +15,11 @@ interface FileItem {
   protected: boolean;
 }
 
+/**
+ * Écran Mon espace (US05/US06/US08) — sidebar desktop / drawer mobile, liste de fichiers
+ * filtrable (réutilise {@link Switch}, déjà interactif nativement). Données de démo statiques
+ * (`files`) en attendant le câblage réel sur `GET /files`.
+ */
 @Component({
   selector: 'app-my-space',
   imports: [RouterLink, Button, Switch],

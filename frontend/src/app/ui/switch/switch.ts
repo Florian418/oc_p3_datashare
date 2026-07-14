@@ -5,6 +5,10 @@ export interface SwitchOption {
   label: string;
 }
 
+/**
+ * Groupe de filtres à onglets — `role="group"` (pas `radiogroup`) : choix assumé de ne pas
+ * promettre une navigation clavier par flèches qui n'est pas implémentée.
+ */
 @Component({
   selector: 'app-switch',
   template: `

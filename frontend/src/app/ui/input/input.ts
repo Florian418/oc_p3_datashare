@@ -2,6 +2,9 @@ import { Component, input, model } from '@angular/core';
 
 export type InputType = 'text' | 'email' | 'password';
 
+/**
+ * Champ de saisie du design system — wrapper autour d'un `<input>` natif.
+ */
 @Component({
   selector: 'app-input',
   template: `
@@ -49,6 +52,8 @@ export class Input {
   type = input<InputType>('text');
   placeholder = input('');
   disabled = input(false);
+  /** Pose uniquement `aria-invalid` (sémantique) — pas de style d'erreur visuel dans le design
+   * system, chaque écran gère le sien selon son contexte. */
   invalid = input(false);
   value = model('');
 }

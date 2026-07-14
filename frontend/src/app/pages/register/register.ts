@@ -4,6 +4,9 @@ import { Footer } from '../../ui/footer/footer';
 import { Button } from '../../ui/button/button';
 import { Input } from '../../ui/input/input';
 
+/**
+ * Écran Créer un compte (US03) — statique pour l'instant, pas encore câblé sur l'API réelle.
+ */
 @Component({
   selector: 'app-register',
   imports: [Header, Footer, Button, Input],

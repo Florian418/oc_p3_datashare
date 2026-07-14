@@ -1,5 +1,8 @@
 import { Component } from '@angular/core';
 
+/**
+ * Pied de page statique, visible uniquement en desktop (absent de la maquette mobile).
+ */
 @Component({
   selector: 'app-footer',
   template: `

@@ -5,6 +5,11 @@ import { RouterLink } from '@angular/router';
 export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'dark';
 export type ButtonSize = 'small' | 'medium';
 
+/**
+ * Bouton générique du design system — rend un `<button>` natif, ou un `<a>` si `routerLink`
+ * est renseigné (jamais un `<button>` imbriqué dans un `<a>`, HTML invalide). `:host { display:
+ * contents }` pour que l'élément réel (button/a) devienne directement l'enfant flex du parent.
+ */
 @Component({
   selector: 'app-button',
   imports: [NgTemplateOutlet, RouterLink],
@@ -128,6 +133,7 @@ export class Button {
   type = input<'button' | 'submit'>('button');
   disabled = input(false);
   fullWidth = input(false);
+  /** Si renseigné, le bouton devient un lien de navigation (`<a>`) plutôt qu'une action. */
   routerLink = input<string | undefined>(undefined);
 
   protected classes = computed(

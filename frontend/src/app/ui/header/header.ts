@@ -1,6 +1,11 @@
 import { Component, input } from '@angular/core';
 import { Button } from '../button/button';
 
+/**
+ * En-tête du site — logo + bouton d'action qui bascule "Se connecter"/"Mon espace" selon
+ * `loggedIn`. Les 4 variantes de la maquette (desktop/mobile × anonyme/connecté) sont
+ * structurellement identiques, le responsive vient du flexbox sans component séparé.
+ */
 @Component({
   selector: 'app-header',
   imports: [Button],

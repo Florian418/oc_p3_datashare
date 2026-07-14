@@ -7,6 +7,12 @@ import { Callout } from '../../ui/callout/callout';
 
 type DownloadState = 'protege' | 'libre' | 'expire';
 
+/**
+ * Écran Téléchargement (US02) — 3 états structurels (protégé/libre/expiré) pilotés par
+ * `state`. Seule interactivité réelle du design statique : le bouton Télécharger réagit en
+ * direct à la saisie du mot de passe (`protectedAndEmpty`), jugé non-métier (comme un
+ * `:focus`) contrairement à la règle "zéro interactivité" de l'écran Téléversement.
+ */
 @Component({
   selector: 'app-download',
   imports: [Header, Footer, Button, Input, Callout],

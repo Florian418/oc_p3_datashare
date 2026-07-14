@@ -7,6 +7,11 @@ import { Select, SelectOption } from '../../ui/select/select';
 
 type UploadState = 'vide' | 'ajoute' | 'erreur' | 'succes';
 
+/**
+ * Écran Téléversement (US01) — 4 états visuels (vide/ajouté/erreur/succès) pilotés par
+ * `state`. Volontairement pas interactif (pas de vrai `<input type="file">`, pas d'appel API) :
+ * le câblage réel sera fait séparément, coder l'interactivité ici ferait doublon.
+ */
 @Component({
   selector: 'app-upload',
   imports: [Header, Footer, Button, Input, Select],

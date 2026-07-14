@@ -4,6 +4,9 @@ import { Footer } from '../../ui/footer/footer';
 import { Button } from '../../ui/button/button';
 import { Input } from '../../ui/input/input';
 
+/**
+ * Écran Connexion (US04) — statique pour l'instant, pas encore câblé sur l'API réelle.
+ */
 @Component({
   selector: 'app-login',
   imports: [Header, Footer, Button, Input],

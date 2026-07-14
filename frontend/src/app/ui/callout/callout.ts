@@ -2,6 +2,10 @@ import { Component, computed, input } from '@angular/core';
 
 export type CalloutType = 'info' | 'alert' | 'error';
 
+/**
+ * Bandeau de notification du design system (info/alert/error) — pas de `role` ARIA forcé,
+ * laissé au contexte d'usage (formulaire, etc.) de décider si une annonce live est nécessaire.
+ */
 @Component({
   selector: 'app-callout',
   template: `

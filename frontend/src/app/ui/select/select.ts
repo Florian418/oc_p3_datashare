@@ -5,6 +5,11 @@ export interface SelectOption {
   label: string;
 }
 
+/**
+ * Liste déroulante du design system — `<select>` natif stylisé (pas de combobox custom ARIA) :
+ * l'accessibilité/clavier est garantie gratuitement par le navigateur, seule limite acceptée
+ * est un panneau d'options natif OS (pas pixel-perfect avec la maquette).
+ */
 @Component({
   selector: 'app-select',
   template: `
