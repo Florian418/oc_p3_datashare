@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <suppress>
+        <notes><![CDATA[
+        Faux positif : CVE-2015-0897 concerne l'application mobile "LINE" (Android/iOS),
+        matchée uniquement parce que le mot "line" apparaît dans "pitest-command-line".
+        Dépendance de test (mutation testing), jamais livrée dans l'application.
+        ]]></notes>
+        <sha1>9ffe81e30025464738c32072a9f44cc5bd462c11</sha1>
+        <cve>CVE-2015-0897</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        Faux positif : CVE-2022-31691 concerne "Spring Tools 4 for Eclipse" et des extensions
+        VSCode (Spring Boot Tools, Concourse CI Pipeline Editor...), matchées uniquement par
+        similarité de nom avec spring-boot-devtools. En plus, cette dépendance est en scope
+        Gradle developmentOnly : jamais présente dans le jar packagé/livré.
+        ]]></notes>
+        <sha1>b1d5779b74060006b173e3d2b8b3e93d8768a95e</sha1>
+        <cve>CVE-2022-31691</cve>
+    </suppress>
+</suppressions>

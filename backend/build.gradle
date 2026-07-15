@@ -5,6 +5,7 @@ plugins {
 	id 'org.springframework.boot' version '4.1.0'
 	id 'jacoco'
 	id 'info.solidsoft.pitest' version '1.19.0'
+	id 'org.owasp.dependencycheck' version '12.2.2'
 }
 
 group = 'fr.euflow'
@@ -48,6 +49,19 @@ dependencies {
 	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
 	testImplementation 'org.testcontainers:testcontainers-postgresql'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// versions forcées au-dessus de celles recommandées par les BOM Spring Boot/AWS SDK —
+	// correctifs de CVE réelles trouvées par OWASP Dependency-Check (détail dans SECURITY.md),
+	// à retirer une fois qu'une version plus récente des BOM les inclut nativement.
+	constraints {
+		implementation('com.fasterxml.jackson.core:jackson-databind:2.21.5') { because 'CVE-2026-54515' }
+		implementation('org.apache.logging.log4j:log4j-api:2.25.5') { because 'CVE-2026-49844' }
+		implementation('org.apache.logging.log4j:log4j-to-slf4j:2.25.5') { because 'CVE-2026-49844' }
+		implementation('org.postgresql:postgresql:42.7.13') { because 'CVE-2026-54291' }
+		implementation('org.apache.tomcat.embed:tomcat-embed-core:11.0.24') { because 'CVE-2026-53434 et al.' }
+		implementation('org.apache.tomcat.embed:tomcat-embed-websocket:11.0.24') { because 'CVE-2026-53434 et al.' }
+		implementation('org.apache.httpcomponents.core5:httpcore5-h2:5.4.3') { because 'CVE-2026-54399/CVE-2026-54428' }
+	}
 }
 
 def loadEnvFile() {
@@ -103,5 +117,13 @@ pitest {
 	// .env (JWT_SECRET...) n'y arrivent pas via environment(), il faut les repasser en -D
 	// (Spring résout ${JWT_SECRET} aussi bien depuis les system properties que l'env réel).
 	jvmArgs = loadEnvFile().collect { key, value -> "-D${key}=${value}" }
+}
+
+dependencyCheck {
+	// dépendances de test (JUnit, Mockito, Testcontainers...) exclues par défaut — non
+	// pertinentes ici, elles ne sont jamais livrées dans l'application packagée.
+	nvd.apiKey = loadEnvFile()['NVD_API_KEY']
+	formats = ['HTML']
+	suppressionFile = 'dependency-check-suppressions.xml'
 }
 
