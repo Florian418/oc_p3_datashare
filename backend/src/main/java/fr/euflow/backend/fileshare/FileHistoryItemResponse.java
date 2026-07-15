@@ -10,11 +10,12 @@ import java.time.Instant;
  * @param id identifiant interne du fichier
  * @param token identifiant public du partage, utilisé dans le lien de téléchargement
  * @param name nom original du fichier
+ * @param mime type MIME réel détecté à l'envoi, utilisé côté front pour choisir l'icône
  * @param size taille en octets
  * @param createdAt date d'envoi
  * @param expiresAt date d'expiration
  * @param passwordProtected {@code true} si un mot de passe protège le téléchargement
  */
 public record FileHistoryItemResponse(
-        Long id, String token, String name, long size, Instant createdAt, Instant expiresAt, boolean passwordProtected) {
+        Long id, String token, String name, String mime, long size, Instant createdAt, Instant expiresAt, boolean passwordProtected) {
 }

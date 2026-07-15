@@ -105,6 +105,7 @@ public class FileShareService {
                         fileShare.getId(),
                         fileShare.getToken().toString(),
                         fileShare.getName(),
+                        fileShare.getMime(),
                         fileShare.getSize(),
                         fileShare.getCreatedAt(),
                         fileShare.getExpiresAt(),

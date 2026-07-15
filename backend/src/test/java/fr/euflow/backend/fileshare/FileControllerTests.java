@@ -156,6 +156,7 @@ class FileControllerTests {
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].name").value("second.png"))
                 .andExpect(jsonPath("$[1].name").value("first.png"))
+                .andExpect(jsonPath("$[0].mime").value("image/png"))
                 .andExpect(jsonPath("$[0].passwordProtected").value(false));
     }
 
