@@ -8,6 +8,17 @@ export interface UploadFileResponse {
   expiresAt: string;
 }
 
+export interface FileHistoryItem {
+  id: number;
+  token: string;
+  name: string;
+  mime: string;
+  size: number;
+  createdAt: string;
+  expiresAt: string;
+  passwordProtected: boolean;
+}
+
 /**
  * Appels aux endpoints de partage de fichiers (`/files`).
  */
@@ -33,5 +44,12 @@ export class FileShare {
     }
 
     return this.http.post<UploadFileResponse>(`${environment.apiUrl}/files`, formData);
+  }
+
+  /**
+   * Historique des fichiers de l'utilisateur authentifié (US05), du plus récent au plus ancien.
+   */
+  list() {
+    return this.http.get<FileHistoryItem[]>(`${environment.apiUrl}/files`);
   }
 }

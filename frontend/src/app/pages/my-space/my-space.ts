@@ -1,7 +1,8 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Button } from '../../ui/button/button';
 import { Switch, SwitchOption } from '../../ui/switch/switch';
+import { FileShare, FileHistoryItem } from '../../fileshare/fileshare';
 
 type FileType = 'image' | 'audio' | 'video';
 type FileStatus = 'active' | 'expired';
@@ -15,10 +16,31 @@ interface FileItem {
   protected: boolean;
 }
 
+function fileTypeFromMime(mime: string): FileType {
+  if (mime.startsWith('audio/')) return 'audio';
+  if (mime.startsWith('video/')) return 'video';
+  return 'image';
+}
+
+function toFileItem(item: FileHistoryItem): FileItem {
+  const msUntilExpiry = new Date(item.expiresAt).getTime() - Date.now();
+  const expired = msUntilExpiry <= 0;
+  const daysUntilExpiry = Math.ceil(msUntilExpiry / (1000 * 60 * 60 * 24));
+  const expiresLabel = expired ? 'Expiré' : daysUntilExpiry <= 1 ? 'Expire demain' : `Expire dans ${daysUntilExpiry} jours`;
+
+  return {
+    id: String(item.id),
+    name: item.name,
+    type: fileTypeFromMime(item.mime),
+    status: expired ? 'expired' : 'active',
+    expiresLabel,
+    protected: item.passwordProtected,
+  };
+}
+
 /**
  * Écran Mon espace (US05/US06/US08) — sidebar desktop / drawer mobile, liste de fichiers
- * filtrable (réutilise {@link Switch}, déjà interactif nativement). Données de démo statiques
- * (`files`) en attendant le câblage réel sur `GET /files`.
+ * filtrable (réutilise {@link Switch}, déjà interactif nativement), câblée sur `GET /files`.
  */
 @Component({
   selector: 'app-my-space',
@@ -518,6 +540,8 @@ interface FileItem {
   `,
 })
 export class MySpace {
+  private fileShare = inject(FileShare);
+
   protected drawerOpen = signal(false);
   protected filter = signal('tous');
 
@@ -527,39 +551,22 @@ export class MySpace {
     { value: 'expire', label: 'Expiré' },
   ];
 
-  private files: FileItem[] = [
-    {
-      id: '1',
-      name: 'IMG_9210_123123131313213231.jpg',
-      type: 'image',
-      status: 'active',
-      expiresLabel: 'Expire dans 2 jours',
-      protected: true,
-    },
-    {
-      id: '2',
-      name: 'compo2.mp3',
-      type: 'audio',
-      status: 'active',
-      expiresLabel: 'Expire demain',
-      protected: false,
-    },
-    {
-      id: '3',
-      name: 'vacances_ardeche.mp4',
-      type: 'video',
-      status: 'expired',
-      expiresLabel: 'Expiré',
-      protected: false,
-    },
-  ];
+  private files = signal<FileItem[]>([]);
 
   protected filteredFiles = computed(() => {
     const filter = this.filter();
-    if (filter === 'actifs') return this.files.filter((file) => file.status === 'active');
-    if (filter === 'expire') return this.files.filter((file) => file.status === 'expired');
-    return this.files;
+    const files = this.files();
+    if (filter === 'actifs') return files.filter((file) => file.status === 'active');
+    if (filter === 'expire') return files.filter((file) => file.status === 'expired');
+    return files;
   });
+
+  constructor() {
+    this.fileShare.list().subscribe({
+      next: (items) => this.files.set(items.map(toFileItem)),
+      error: () => this.files.set([]),
+    });
+  }
 
   protected openDrawer(): void {
     this.drawerOpen.set(true);
