@@ -4,6 +4,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.1.0'
 	id 'jacoco'
+	id 'info.solidsoft.pitest' version '1.19.0'
 }
 
 group = 'fr.euflow'
@@ -86,5 +87,21 @@ tasks.named('jacocoTestReport') {
 		xml.required = true
 		html.required = true
 	}
+}
+
+pitest {
+	// version PIT récente indépendante de celle par défaut du plugin (1.19.x) — nécessaire
+	// pour le support du bytecode Java 25 (ASM 9.10.1+, cf. issue hcoles/pitest#1439).
+	pitestVersion = '1.25.7'
+	junit5PluginVersion = '1.2.3'
+	targetClasses = ['fr.euflow.backend.*']
+	excludedClasses = ['fr.euflow.backend.BackendApplication']
+	threads = 4
+	outputFormats = ['HTML']
+	timestampedReports = false
+	// le task pitest lance sa propre JVM, distincte de celle du task test — les variables du
+	// .env (JWT_SECRET...) n'y arrivent pas via environment(), il faut les repasser en -D
+	// (Spring résout ${JWT_SECRET} aussi bien depuis les system properties que l'env réel).
+	jvmArgs = loadEnvFile().collect { key, value -> "-D${key}=${value}" }
 }
 

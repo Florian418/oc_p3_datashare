@@ -2,6 +2,7 @@ package fr.euflow.backend.fileshare;
 
 import fr.euflow.backend.TestcontainersConfiguration;
 import fr.euflow.backend.security.JwtService;
+import fr.euflow.backend.storage.FileStorageService;
 import fr.euflow.backend.user.User;
 import fr.euflow.backend.user.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -19,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -52,6 +55,9 @@ class FileControllerTests {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private FileStorageService fileStorageService;
 
     @AfterEach
     void cleanUp() {
@@ -112,6 +118,19 @@ class FileControllerTests {
     }
 
     @Test
+    void upload_withValidFile_actuallyStoresContentInGarage() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
+
+        mockMvc.perform(multipart("/api/v1/files").file(file))
+                .andExpect(status().isCreated());
+
+        var saved = fileShareRepository.findAll().getFirst();
+        try (var stored = fileStorageService.retrieve(saved.getToken().toString())) {
+            assertArrayEquals(PNG_SIGNATURE, stored.readAllBytes());
+        }
+    }
+
+    @Test
     void upload_withTags_persistsThem() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
 
@@ -129,6 +148,17 @@ class FileControllerTests {
 
         mockMvc.perform(multipart("/api/v1/files").file(file))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void upload_withBlankPassword_isTreatedAsUnprotected() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
+
+        mockMvc.perform(multipart("/api/v1/files").file(file).param("password", ""))
+                .andExpect(status().isCreated());
+
+        var saved = fileShareRepository.findAll().getFirst();
+        assertEquals(null, saved.getSharePasswordHash());
     }
 
     @Test
@@ -206,12 +236,17 @@ class FileControllerTests {
         MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
         mockMvc.perform(multipart("/api/v1/files").file(file).header(HttpHeaders.AUTHORIZATION, jwt))
                 .andExpect(status().isCreated());
-        Long fileId = fileShareRepository.findAll().getFirst().getId();
+        var uploaded = fileShareRepository.findAll().getFirst();
+        Long fileId = uploaded.getId();
+        String token = uploaded.getToken().toString();
 
         mockMvc.perform(delete("/api/v1/files/{id}", fileId).header(HttpHeaders.AUTHORIZATION, jwt))
                 .andExpect(status().isNoContent());
 
         assertTrue(fileShareRepository.findById(fileId).isEmpty());
+        // pas seulement la ligne en base : le contenu réel doit aussi disparaître de Garage,
+        // sinon c'est une fuite de stockage (fichier orphelin jamais nettoyé).
+        assertThrows(Exception.class, () -> fileStorageService.retrieve(token).readAllBytes());
     }
 
     @Test

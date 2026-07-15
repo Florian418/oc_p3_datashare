@@ -6,10 +6,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -42,5 +48,47 @@ class FileShareServiceTests {
         // (détection du type, stockage) — pas seulement lever la bonne exception.
         verifyNoInteractions(fileTypeValidator);
         verifyNoInteractions(fileStorageService);
+    }
+
+    @Test
+    void upload_withFileAtExactSizeLimit_isAccepted() {
+        MultipartFile file = validFile(MAX_SIZE_BYTES);
+
+        assertDoesNotThrow(() -> service.upload(file, null, null, List.of()));
+    }
+
+    @Test
+    void upload_withPasswordAtMinimumLength_isAccepted() {
+        MultipartFile file = validFile(1024);
+
+        assertDoesNotThrow(() -> service.upload(file, null, "abcdef", List.of()));
+    }
+
+    @Test
+    void upload_withExpiresInDaysAtBoundaries_isAccepted() {
+        assertDoesNotThrow(() -> service.upload(validFile(1024), 1, null, List.of()));
+        assertDoesNotThrow(() -> service.upload(validFile(1024), 7, null, List.of()));
+    }
+
+    @Test
+    void upload_withValidFile_storesContentViaFileStorageService() {
+        MultipartFile file = validFile(1024);
+
+        service.upload(file, null, null, List.of());
+
+        verify(fileStorageService).store(anyString(), any(), anyLong(), anyString());
+    }
+
+    private MultipartFile validFile(long size) {
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getSize()).thenReturn(size);
+        when(file.getOriginalFilename()).thenReturn("photo.png");
+        try {
+            when(file.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[]{1, 2, 3}));
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
+        when(fileTypeValidator.detectAndValidate(any())).thenReturn("image/png");
+        return file;
     }
 }
