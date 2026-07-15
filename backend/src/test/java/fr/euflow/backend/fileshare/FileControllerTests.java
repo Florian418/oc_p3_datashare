@@ -21,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -133,6 +134,35 @@ class FileControllerTests {
         mockMvc.perform(multipart("/api/v1/files").file(file)
                         .param("expiresInDays", "8"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void list_forOwner_returnsOnlyTheirFilesMostRecentFirst() throws Exception {
+        User owner = registerUser("owner@example.com", "s3cret!!");
+        String jwt = jwtService.generateToken(owner.getEmail()).value();
+        String ownerJwtHeader = "Bearer " + jwt;
+        MockMultipartFile firstFile = new MockMultipartFile("file", "first.png", "image/png", PNG_SIGNATURE);
+        MockMultipartFile secondFile = new MockMultipartFile("file", "second.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(firstFile).header(HttpHeaders.AUTHORIZATION, ownerJwtHeader))
+                .andExpect(status().isCreated());
+        mockMvc.perform(multipart("/api/v1/files").file(secondFile).header(HttpHeaders.AUTHORIZATION, ownerJwtHeader))
+                .andExpect(status().isCreated());
+        MockMultipartFile anonymousFile = new MockMultipartFile("file", "anonymous.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(anonymousFile))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/files").header(HttpHeaders.AUTHORIZATION, ownerJwtHeader))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].name").value("second.png"))
+                .andExpect(jsonPath("$[1].name").value("first.png"))
+                .andExpect(jsonPath("$[0].passwordProtected").value(false));
+    }
+
+    @Test
+    void list_withoutAuthentication_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/files"))
+                .andExpect(status().isUnauthorized());
     }
 
     private User registerUser(String email, String password) {

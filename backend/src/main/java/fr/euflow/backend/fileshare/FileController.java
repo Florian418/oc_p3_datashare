@@ -2,6 +2,7 @@ package fr.euflow.backend.fileshare;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -44,5 +45,16 @@ public class FileController {
         UploadFileResponse response = fileShareService.upload(
                 file, expiresInDays, password, tags == null ? Collections.emptyList() : tags);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * Liste les fichiers déposés par l'utilisateur authentifié (US05). Route protégée par
+     * défaut (voir {@code SecurityConfig}) : un JWT valide est requis.
+     *
+     * @return les fichiers du propriétaire, du plus récent au plus ancien
+     */
+    @GetMapping
+    public List<FileHistoryItemResponse> list() {
+        return fileShareService.listForCurrentUser();
     }
 }

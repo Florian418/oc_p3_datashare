@@ -91,6 +91,27 @@ public class FileShareService {
         return new UploadFileResponse(fileShare.getToken().toString(), downloadUrl, expiresAt);
     }
 
+    /**
+     * Liste les fichiers déposés par l'utilisateur authentifié (US05, historique). La route
+     * exige déjà une authentification valide (voir {@code SecurityConfig}), donc l'utilisateur
+     * résolu ici n'est jamais {@code null} en pratique.
+     *
+     * @return les fichiers du propriétaire, du plus récent au plus ancien
+     */
+    public List<FileHistoryItemResponse> listForCurrentUser() {
+        User owner = resolveAuthenticatedUser();
+        return fileShareRepository.findByUserOrderByCreatedAtDesc(owner).stream()
+                .map(fileShare -> new FileHistoryItemResponse(
+                        fileShare.getId(),
+                        fileShare.getToken().toString(),
+                        fileShare.getName(),
+                        fileShare.getSize(),
+                        fileShare.getCreatedAt(),
+                        fileShare.getExpiresAt(),
+                        fileShare.getSharePasswordHash() != null))
+                .toList();
+    }
+
     private String detectMimeType(MultipartFile file) {
         try {
             return fileTypeValidator.detectAndValidate(file.getInputStream());
