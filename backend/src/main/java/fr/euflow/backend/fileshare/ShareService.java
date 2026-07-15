@@ -2,6 +2,8 @@ package fr.euflow.backend.fileshare;
 
 import fr.euflow.backend.security.JwtService;
 import fr.euflow.backend.storage.FileStorageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,8 @@ import java.util.UUID;
  */
 @Service
 public class ShareService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ShareService.class);
 
     // courte durée volontaire (US02) : suffisante pour enchaîner authenticate → download,
     // jamais un vrai risque même si le token finit dans un log (il ne compromet pas le mot de
@@ -95,6 +99,13 @@ public class ShareService {
         if (fileShare.getSharePasswordHash() != null) {
             requireValidAccessToken(fileShare, accessToken);
         }
+
+        LOGGER.atInfo()
+                .setMessage("file_downloaded")
+                .addKeyValue("sizeBytes", fileShare.getSize())
+                .addKeyValue("mimeType", fileShare.getMime())
+                .addKeyValue("passwordProtected", fileShare.getSharePasswordHash() != null)
+                .log();
 
         return new ShareDownload(
                 fileStorageService.retrieve(fileShare.getToken().toString()),

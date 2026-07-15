@@ -3,6 +3,8 @@ package fr.euflow.backend.fileshare;
 import fr.euflow.backend.storage.FileStorageService;
 import fr.euflow.backend.user.User;
 import fr.euflow.backend.user.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,6 +26,8 @@ import java.util.List;
  */
 @Service
 public class FileShareService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileShareService.class);
 
     private static final long MAX_SIZE_BYTES = 1_073_741_824L; // 1 Go (US01)
     private static final int MIN_EXPIRES_IN_DAYS = 1;
@@ -73,7 +77,8 @@ public class FileShareService {
         }
 
         String mimeType = detectMimeType(file);
-        Instant expiresAt = Instant.now().plus(resolveExpiresInDays(expiresInDays), ChronoUnit.DAYS);
+        int resolvedExpiresInDays = resolveExpiresInDays(expiresInDays);
+        Instant expiresAt = Instant.now().plus(resolvedExpiresInDays, ChronoUnit.DAYS);
         String sharePasswordHash = (password == null || password.isBlank()) ? null : passwordEncoder.encode(password);
         User owner = resolveAuthenticatedUser();
 
@@ -86,6 +91,15 @@ public class FileShareService {
 
         storeContent(file, fileShare);
         fileShareRepository.save(fileShare);
+
+        LOGGER.atInfo()
+                .setMessage("file_uploaded")
+                .addKeyValue("sizeBytes", fileShare.getSize())
+                .addKeyValue("mimeType", mimeType)
+                .addKeyValue("expiresInDays", resolvedExpiresInDays)
+                .addKeyValue("passwordProtected", sharePasswordHash != null)
+                .addKeyValue("authenticated", owner != null)
+                .log();
 
         String downloadUrl = frontendBaseUrl + "/download/" + fileShare.getToken();
         return new UploadFileResponse(fileShare.getToken().toString(), downloadUrl, expiresAt);
