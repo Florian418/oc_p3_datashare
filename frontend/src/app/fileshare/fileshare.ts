@@ -52,4 +52,11 @@ export class FileShare {
   list() {
     return this.http.get<FileHistoryItem[]>(`${environment.apiUrl}/files`);
   }
+
+  /**
+   * Supprime un fichier (US06). 404 si l'id n'existe pas ou n'appartient pas à l'appelant.
+   */
+  delete(id: number) {
+    return this.http.delete<void>(`${environment.apiUrl}/files/${id}`);
+  }
 }

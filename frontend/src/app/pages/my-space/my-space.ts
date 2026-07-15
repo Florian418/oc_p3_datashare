@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Button } from '../../ui/button/button';
 import { Switch, SwitchOption } from '../../ui/switch/switch';
@@ -45,6 +45,9 @@ function toFileItem(item: FileHistoryItem): FileItem {
 @Component({
   selector: 'app-my-space',
   imports: [RouterLink, Button, Switch],
+  host: {
+    '(document:click)': 'closeMenusOutside($event)',
+  },
   template: `
     <div class="my-space">
       <aside class="my-space__sidebar">
@@ -141,34 +144,46 @@ function toFileItem(item: FileHistoryItem): FileItem {
                       </svg>
                     }
 
-                    <div class="my-space__row-buttons">
-                      <app-button variant="secondary" size="small">
-                        <svg slot="icon" width="13.6" height="14.933" viewBox="0 0 13.6 14.933" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M10.2667 2.13333L10.2667 2.66667L12.8 2.66667C13.2418 2.66667 13.6 3.02484 13.6 3.46667C13.6 3.90849 13.2418 4.26667 12.8 4.26667L12.2667 4.26667L12.2667 12.8C12.2667 13.3658 12.0419 13.9084 11.6418 14.3085C11.2417 14.7086 10.6991 14.9333 10.1333 14.9333L3.46667 14.9333C2.90087 14.9333 2.35825 14.7086 1.95817 14.3085C1.55809 13.9084 1.33333 13.3658 1.33333 12.8L1.33333 4.26667L0.8 4.26667C0.358172 4.26667 0 3.90849 0 3.46667C0 3.02484 0.358172 2.66667 0.8 2.66667L3.33333 2.66667L3.33333 2.13333C3.33333 1.56754 3.5581 1.02492 3.95817 0.624839C4.35825 0.224761 4.90087 0 5.46667 0L8.13333 0C8.69913 0 9.24175 0.224761 9.64183 0.624839C10.0419 1.02492 10.2667 1.56754 10.2667 2.13333L10.2667 2.13333ZM5.08954 1.75621C5.18956 1.65619 5.32522 1.6 5.46667 1.6L8.13333 1.6C8.27478 1.6 8.41044 1.65619 8.51046 1.75621C8.61048 1.85623 8.66667 1.99188 8.66667 2.13333L8.66667 2.66667L4.93333 2.66667L4.93333 2.13333C4.93333 1.99189 4.98952 1.85623 5.08954 1.75621L5.08954 1.75621ZM2.93333 4.26667L10.6667 4.26667L10.6667 12.8C10.6667 12.9414 10.6105 13.0771 10.5105 13.1771C10.4104 13.2771 10.2748 13.3333 10.1333 13.3333L3.46667 13.3333C3.32522 13.3333 3.18956 13.2771 3.08954 13.1771C2.98952 13.0771 2.93333 12.9414 2.93333 12.8L2.93333 4.26667L2.93333 4.26667ZM6.26667 6.8C6.26667 6.35817 5.90849 6 5.46667 6C5.02484 6 4.66667 6.35817 4.66667 6.8L4.66667 10.8C4.66667 11.2418 5.02484 11.6 5.46667 11.6C5.90849 11.6 6.26667 11.2418 6.26667 10.8L6.26667 6.8L6.26667 6.8ZM8.93333 6.8C8.93333 6.35817 8.57516 6 8.13333 6C7.69151 6 7.33333 6.35817 7.33333 6.8L7.33333 10.8C7.33333 11.2418 7.69151 11.6 8.13333 11.6C8.57516 11.6 8.93333 11.2418 8.93333 10.8L8.93333 6.8L8.93333 6.8Z" fill="currentColor" fill-rule="evenodd" />
-                        </svg>
-                        Supprimer
-                      </app-button>
-                      <app-button variant="secondary" size="small">
-                        Accéder
-                        <svg slot="icon-end" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M6.03235 0.234315C5.71993 -0.078105 5.2134 -0.078105 4.90098 0.234315C4.58856 0.546734 4.58856 1.05327 4.90098 1.36568L8.20197 4.66667L0.8 4.66667C0.358172 4.66667 0 5.02484 0 5.46667C0 5.90849 0.358172 6.26667 0.8 6.26667L8.20196 6.26667L4.90098 9.56765C4.58856 9.88007 4.58856 10.3866 4.90098 10.699C5.2134 11.0114 5.71993 11.0114 6.03235 10.699L10.699 6.03235C11.0114 5.71993 11.0114 5.2134 10.699 4.90098L6.03235 0.234315L6.03235 0.234315Z" fill="currentColor" fill-rule="evenodd" transform="translate(2.533 2.533)" />
-                        </svg>
-                      </app-button>
-                    </div>
-
-                    <details class="my-space__row-menu">
-                      <summary class="my-space__row-menu-trigger" aria-label="Actions pour {{ file.name }}">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                          <circle cx="8" cy="3.33" r="1.47" fill="currentColor" />
-                          <circle cx="8" cy="8" r="1.47" fill="currentColor" />
-                          <circle cx="8" cy="12.67" r="1.47" fill="currentColor" />
-                        </svg>
-                      </summary>
-                      <div class="my-space__row-menu-panel">
-                        <button type="button" class="my-space__row-menu-item">Supprimer</button>
-                        <button type="button" class="my-space__row-menu-item">Accéder</button>
+                    @if (confirmingDeleteId() === file.id) {
+                      <div class="my-space__row-confirm">
+                        <span class="my-space__row-confirm-text">Supprimer ?</span>
+                        <app-button variant="tertiary" size="small" [disabled]="deletingId() === file.id" (click)="cancelDelete()">
+                          Annuler
+                        </app-button>
+                        <app-button variant="primary" size="small" [disabled]="deletingId() === file.id" (click)="confirmDelete(file)">
+                          {{ deletingId() === file.id ? 'Suppression...' : 'Confirmer' }}
+                        </app-button>
                       </div>
-                    </details>
+                    } @else {
+                      <div class="my-space__row-buttons">
+                        <app-button variant="secondary" size="small" (click)="requestDelete(file.id)">
+                          <svg slot="icon" width="13.6" height="14.933" viewBox="0 0 13.6 14.933" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10.2667 2.13333L10.2667 2.66667L12.8 2.66667C13.2418 2.66667 13.6 3.02484 13.6 3.46667C13.6 3.90849 13.2418 4.26667 12.8 4.26667L12.2667 4.26667L12.2667 12.8C12.2667 13.3658 12.0419 13.9084 11.6418 14.3085C11.2417 14.7086 10.6991 14.9333 10.1333 14.9333L3.46667 14.9333C2.90087 14.9333 2.35825 14.7086 1.95817 14.3085C1.55809 13.9084 1.33333 13.3658 1.33333 12.8L1.33333 4.26667L0.8 4.26667C0.358172 4.26667 0 3.90849 0 3.46667C0 3.02484 0.358172 2.66667 0.8 2.66667L3.33333 2.66667L3.33333 2.13333C3.33333 1.56754 3.5581 1.02492 3.95817 0.624839C4.35825 0.224761 4.90087 0 5.46667 0L8.13333 0C8.69913 0 9.24175 0.224761 9.64183 0.624839C10.0419 1.02492 10.2667 1.56754 10.2667 2.13333L10.2667 2.13333ZM5.08954 1.75621C5.18956 1.65619 5.32522 1.6 5.46667 1.6L8.13333 1.6C8.27478 1.6 8.41044 1.65619 8.51046 1.75621C8.61048 1.85623 8.66667 1.99188 8.66667 2.13333L8.66667 2.66667L4.93333 2.66667L4.93333 2.13333C4.93333 1.99189 4.98952 1.85623 5.08954 1.75621L5.08954 1.75621ZM2.93333 4.26667L10.6667 4.26667L10.6667 12.8C10.6667 12.9414 10.6105 13.0771 10.5105 13.1771C10.4104 13.2771 10.2748 13.3333 10.1333 13.3333L3.46667 13.3333C3.32522 13.3333 3.18956 13.2771 3.08954 13.1771C2.98952 13.0771 2.93333 12.9414 2.93333 12.8L2.93333 4.26667L2.93333 4.26667ZM6.26667 6.8C6.26667 6.35817 5.90849 6 5.46667 6C5.02484 6 4.66667 6.35817 4.66667 6.8L4.66667 10.8C4.66667 11.2418 5.02484 11.6 5.46667 11.6C5.90849 11.6 6.26667 11.2418 6.26667 10.8L6.26667 6.8L6.26667 6.8ZM8.93333 6.8C8.93333 6.35817 8.57516 6 8.13333 6C7.69151 6 7.33333 6.35817 7.33333 6.8L7.33333 10.8C7.33333 11.2418 7.69151 11.6 8.13333 11.6C8.57516 11.6 8.93333 11.2418 8.93333 10.8L8.93333 6.8L8.93333 6.8Z" fill="currentColor" fill-rule="evenodd" />
+                          </svg>
+                          Supprimer
+                        </app-button>
+                        <app-button variant="secondary" size="small">
+                          Accéder
+                          <svg slot="icon-end" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6.03235 0.234315C5.71993 -0.078105 5.2134 -0.078105 4.90098 0.234315C4.58856 0.546734 4.58856 1.05327 4.90098 1.36568L8.20197 4.66667L0.8 4.66667C0.358172 4.66667 0 5.02484 0 5.46667C0 5.90849 0.358172 6.26667 0.8 6.26667L8.20196 6.26667L4.90098 9.56765C4.58856 9.88007 4.58856 10.3866 4.90098 10.699C5.2134 11.0114 5.71993 11.0114 6.03235 10.699L10.699 6.03235C11.0114 5.71993 11.0114 5.2134 10.699 4.90098L6.03235 0.234315L6.03235 0.234315Z" fill="currentColor" fill-rule="evenodd" transform="translate(2.533 2.533)" />
+                          </svg>
+                        </app-button>
+                      </div>
+
+                      <details class="my-space__row-menu" name="file-row-menu">
+                        <summary class="my-space__row-menu-trigger" aria-label="Actions pour {{ file.name }}">
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="8" cy="3.33" r="1.47" fill="currentColor" />
+                            <circle cx="8" cy="8" r="1.47" fill="currentColor" />
+                            <circle cx="8" cy="12.67" r="1.47" fill="currentColor" />
+                          </svg>
+                        </summary>
+                        <div class="my-space__row-menu-panel">
+                          <button type="button" class="my-space__row-menu-item" (click)="requestDelete(file.id)">Supprimer</button>
+                          <button type="button" class="my-space__row-menu-item">Accéder</button>
+                        </div>
+                      </details>
+                    }
                   </div>
                 }
               </li>
@@ -408,6 +423,20 @@ function toFileItem(item: FileHistoryItem): FileItem {
       gap: 8px;
     }
 
+    .my-space__row-confirm {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .my-space__row-confirm-text {
+      font-family: var(--font-family-sans);
+      font-size: 14px;
+      line-height: 16px;
+      color: #000000;
+      white-space: nowrap;
+    }
+
     /* --- Mobile row menu (details/summary, no JS needed) --- */
 
     .my-space__row-menu {
@@ -446,6 +475,11 @@ function toFileItem(item: FileHistoryItem): FileItem {
       border: 1px solid var(--color-input-border);
       border-radius: 8px;
       box-shadow: 0 4px 12px 0 rgb(0 0 0 / 25%);
+    }
+
+    .my-space__row:last-child .my-space__row-menu-panel {
+      top: auto;
+      bottom: calc(100% + 4px);
     }
 
     .my-space__row-menu-item {
@@ -541,6 +575,7 @@ function toFileItem(item: FileHistoryItem): FileItem {
 })
 export class MySpace {
   private fileShare = inject(FileShare);
+  private elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
 
   protected drawerOpen = signal(false);
   protected filter = signal('tous');
@@ -561,6 +596,9 @@ export class MySpace {
     return files;
   });
 
+  protected confirmingDeleteId = signal<string | null>(null);
+  protected deletingId = signal<string | null>(null);
+
   constructor() {
     this.fileShare.list().subscribe({
       next: (items) => this.files.set(items.map(toFileItem)),
@@ -574,5 +612,35 @@ export class MySpace {
 
   protected closeDrawer(): void {
     this.drawerOpen.set(false);
+  }
+
+  protected closeMenusOutside(event: MouseEvent): void {
+    const target = event.target as Node;
+    const openMenus = this.elementRef.nativeElement.querySelectorAll<HTMLDetailsElement>('details.my-space__row-menu[open]');
+    for (const menu of openMenus) {
+      if (!menu.contains(target)) {
+        menu.open = false;
+      }
+    }
+  }
+
+  protected requestDelete(id: string): void {
+    this.confirmingDeleteId.set(id);
+  }
+
+  protected cancelDelete(): void {
+    this.confirmingDeleteId.set(null);
+  }
+
+  protected confirmDelete(file: FileItem): void {
+    this.deletingId.set(file.id);
+    this.fileShare.delete(Number(file.id)).subscribe({
+      next: () => {
+        this.files.update((files) => files.filter((f) => f.id !== file.id));
+        this.confirmingDeleteId.set(null);
+        this.deletingId.set(null);
+      },
+      error: () => this.deletingId.set(null),
+    });
   }
 }
