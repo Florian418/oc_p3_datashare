@@ -1,8 +1,9 @@
 import { Component, ElementRef, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Button } from '../../ui/button/button';
 import { Switch, SwitchOption } from '../../ui/switch/switch';
 import { FileShare, FileHistoryItem } from '../../fileshare/fileshare';
+import { Auth } from '../../auth/auth';
 
 type FileType = 'image' | 'audio' | 'video';
 type FileStatus = 'active' | 'expired';
@@ -72,6 +73,12 @@ function toFileItem(item: FileHistoryItem): FileItem {
           <nav class="my-space__nav">
             <span class="my-space__nav-pill">Mes fichiers</span>
           </nav>
+          <button type="button" class="my-space__drawer-logout" (click)="logout()">
+            <svg width="13.6" height="13.6" viewBox="0 0 13.6 13.6" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1.75621 1.75621C1.85623 1.65619 1.99188 1.6 2.13333 1.6L4.8 1.6C5.24183 1.6 5.6 1.24183 5.6 0.8C5.6 0.358172 5.24183 0 4.8 0L2.13333 0C1.56754 0 1.02492 0.224761 0.624839 0.624839C0.224761 1.02492 0 1.56754 0 2.13333L0 11.4667C0 12.0325 0.224761 12.5751 0.624839 12.9752C1.02492 13.3752 1.56754 13.6 2.13333 13.6L4.8 13.6C5.24183 13.6 5.6 13.2418 5.6 12.8C5.6 12.3582 5.24183 12 4.8 12L2.13333 12C1.99189 12 1.85623 11.9438 1.75621 11.8438C1.65619 11.7438 1.6 11.6081 1.6 11.4667L1.6 2.13333C1.6 1.99188 1.65619 1.85623 1.75621 1.75621L1.75621 1.75621ZM10.0324 2.90098C9.71993 2.58856 9.2134 2.58856 8.90098 2.90098C8.58856 3.2134 8.58856 3.71993 8.90098 4.03235L10.8686 6L4.8 6C4.35817 6 4 6.35817 4 6.8C4 7.24183 4.35817 7.6 4.8 7.6L10.8686 7.6L8.90098 9.56765C8.58856 9.88007 8.58856 10.3866 8.90098 10.699C9.2134 11.0114 9.71993 11.0114 10.0324 10.699L13.3657 7.36569C13.6781 7.05327 13.6781 6.54673 13.3657 6.23431L10.0324 2.90098L10.0324 2.90098Z" fill="currentColor" fill-rule="evenodd" />
+            </svg>
+            Déconnexion
+          </button>
           <p class="my-space__drawer-footer">Copyright DataShare© 2026</p>
         </aside>
       }
@@ -86,7 +93,7 @@ function toFileItem(item: FileHistoryItem): FileItem {
 
           <div class="my-space__topbar-actions">
             <app-button variant="dark" size="small" routerLink="/">Ajouter des fichiers</app-button>
-            <app-button variant="tertiary" size="small">
+            <app-button variant="tertiary" size="small" (click)="logout()">
               <svg slot="icon" width="13.6" height="13.6" viewBox="0 0 13.6 13.6" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                 <path d="M1.75621 1.75621C1.85623 1.65619 1.99188 1.6 2.13333 1.6L4.8 1.6C5.24183 1.6 5.6 1.24183 5.6 0.8C5.6 0.358172 5.24183 0 4.8 0L2.13333 0C1.56754 0 1.02492 0.224761 0.624839 0.624839C0.224761 1.02492 0 1.56754 0 2.13333L0 11.4667C0 12.0325 0.224761 12.5751 0.624839 12.9752C1.02492 13.3752 1.56754 13.6 2.13333 13.6L4.8 13.6C5.24183 13.6 5.6 13.2418 5.6 12.8C5.6 12.3582 5.24183 12 4.8 12L2.13333 12C1.99189 12 1.85623 11.9438 1.75621 11.8438C1.65619 11.7438 1.6 11.6081 1.6 11.4667L1.6 2.13333C1.6 1.99188 1.65619 1.85623 1.75621 1.75621L1.75621 1.75621ZM10.0324 2.90098C9.71993 2.58856 9.2134 2.58856 8.90098 2.90098C8.58856 3.2134 8.58856 3.71993 8.90098 4.03235L10.8686 6L4.8 6C4.35817 6 4 6.35817 4 6.8C4 7.24183 4.35817 7.6 4.8 7.6L10.8686 7.6L8.90098 9.56765C8.58856 9.88007 8.58856 10.3866 8.90098 10.699C9.2134 11.0114 9.71993 11.0114 10.0324 10.699L13.3657 7.36569C13.6781 7.05327 13.6781 6.54673 13.3657 6.23431L10.0324 2.90098L10.0324 2.90098Z" fill="currentColor" fill-rule="evenodd" />
               </svg>
@@ -263,6 +270,24 @@ function toFileItem(item: FileHistoryItem): FileItem {
     .my-space__logo--drawer {
       font-size: 24px;
       line-height: 32px;
+    }
+
+    .my-space__drawer-logout {
+      appearance: none;
+      box-sizing: border-box;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 12px;
+      border: 1px solid rgb(255 255 255 / 44%);
+      background: transparent;
+      font-family: var(--font-family-sans);
+      font-size: 16px;
+      line-height: 24px;
+      color: #f1e9e2;
+      cursor: pointer;
     }
 
     .my-space__drawer-footer {
@@ -576,6 +601,8 @@ function toFileItem(item: FileHistoryItem): FileItem {
 export class MySpace {
   private fileShare = inject(FileShare);
   private elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  private auth = inject(Auth);
+  private router = inject(Router);
 
   protected drawerOpen = signal(false);
   protected filter = signal('tous');
@@ -612,6 +639,11 @@ export class MySpace {
 
   protected closeDrawer(): void {
     this.drawerOpen.set(false);
+  }
+
+  protected logout(): void {
+    this.auth.logout();
+    this.router.navigateByUrl('/');
   }
 
   protected closeMenusOutside(event: MouseEvent): void {
