@@ -168,6 +168,26 @@ class FileControllerTests {
     }
 
     @Test
+    void list_forOwner_doesNotIncludeAnotherUsersFiles() throws Exception {
+        User owner = registerUser("owner@example.com", "s3cret!!");
+        String ownerJwt = "Bearer " + jwtService.generateToken(owner.getEmail()).value();
+        MockMultipartFile ownFile = new MockMultipartFile("file", "mine.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(ownFile).header(HttpHeaders.AUTHORIZATION, ownerJwt))
+                .andExpect(status().isCreated());
+
+        User other = registerUser("other@example.com", "s3cret!!");
+        String otherJwt = "Bearer " + jwtService.generateToken(other.getEmail()).value();
+        MockMultipartFile otherFile = new MockMultipartFile("file", "not-mine.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(otherFile).header(HttpHeaders.AUTHORIZATION, otherJwt))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/files").header(HttpHeaders.AUTHORIZATION, ownerJwt))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].name").value("mine.png"));
+    }
+
+    @Test
     void delete_asOwner_removesFile() throws Exception {
         User owner = registerUser("owner@example.com", "s3cret!!");
         String jwt = "Bearer " + jwtService.generateToken(owner.getEmail()).value();
@@ -213,6 +233,22 @@ class FileControllerTests {
 
         mockMvc.perform(delete("/api/v1/files/{id}", 999_999).header(HttpHeaders.AUTHORIZATION, jwt))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void delete_ofAnonymousFile_returns404() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(file))
+                .andExpect(status().isCreated());
+        Long fileId = fileShareRepository.findAll().getFirst().getId();
+
+        User authenticatedUser = registerUser("owner@example.com", "s3cret!!");
+        String jwt = "Bearer " + jwtService.generateToken(authenticatedUser.getEmail()).value();
+
+        mockMvc.perform(delete("/api/v1/files/{id}", fileId).header(HttpHeaders.AUTHORIZATION, jwt))
+                .andExpect(status().isNotFound());
+
+        assertTrue(fileShareRepository.findById(fileId).isPresent());
     }
 
     private User registerUser(String email, String password) {
