@@ -100,6 +100,18 @@ class FileControllerTests {
     }
 
     @Test
+    void upload_withValidExpiresInDays_usesRequestedValue() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
+
+        mockMvc.perform(multipart("/api/v1/files").file(file).param("expiresInDays", "3"))
+                .andExpect(status().isCreated());
+
+        var saved = fileShareRepository.findAll().getFirst();
+        Instant expected = Instant.now().plus(3, ChronoUnit.DAYS);
+        assertTrue(Math.abs(saved.getExpiresAt().getEpochSecond() - expected.getEpochSecond()) < 60);
+    }
+
+    @Test
     void upload_withTags_persistsThem() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
 
