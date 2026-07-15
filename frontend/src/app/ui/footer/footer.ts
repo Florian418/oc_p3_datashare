@@ -7,7 +7,7 @@ import { Component } from '@angular/core';
   selector: 'app-footer',
   template: `
     <footer class="footer">
-      <div class="footer__inner">Copyright DataShare© 2025</div>
+      <div class="footer__inner">Copyright DataShare© 2026</div>
     </footer>
   `,
   styles: `

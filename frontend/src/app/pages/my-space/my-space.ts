@@ -55,7 +55,7 @@ function toFileItem(item: FileHistoryItem): FileItem {
         <nav class="my-space__nav">
           <span class="my-space__nav-pill">Mes fichiers</span>
         </nav>
-        <p class="my-space__sidebar-footer">Copyright DataShare© 2025</p>
+        <p class="my-space__sidebar-footer">Copyright DataShare© 2026</p>
       </aside>
 
       @if (drawerOpen()) {
@@ -72,7 +72,7 @@ function toFileItem(item: FileHistoryItem): FileItem {
           <nav class="my-space__nav">
             <span class="my-space__nav-pill">Mes fichiers</span>
           </nav>
-          <p class="my-space__drawer-footer">Copyright DataShare© 2025</p>
+          <p class="my-space__drawer-footer">Copyright DataShare© 2026</p>
         </aside>
       }
 
