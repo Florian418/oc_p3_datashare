@@ -1,5 +1,6 @@
 package fr.euflow.backend.fileshare;
 
+import fr.euflow.backend.storage.StorageUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -47,5 +48,10 @@ public class FileShareExceptionHandler {
     @ExceptionHandler({SharePasswordMismatchException.class, InvalidAccessTokenException.class})
     public ProblemDetail handleShareAccessDenied(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(StorageUnavailableException.class)
+    public ProblemDetail handleStorageUnavailable(StorageUnavailableException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
     }
 }

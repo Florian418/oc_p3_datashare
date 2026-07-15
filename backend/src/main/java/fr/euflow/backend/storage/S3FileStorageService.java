@@ -3,6 +3,7 @@ package fr.euflow.backend.storage;
 import java.io.InputStream;
 
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -32,7 +33,11 @@ public class S3FileStorageService implements FileStorageService {
                 .key(key)
                 .contentType(contentType)
                 .build();
-        s3Client.putObject(request, RequestBody.fromInputStream(content, contentLength));
+        try {
+            s3Client.putObject(request, RequestBody.fromInputStream(content, contentLength));
+        } catch (SdkException e) {
+            throw new StorageUnavailableException(e);
+        }
     }
 
     @Override
@@ -41,7 +46,11 @@ public class S3FileStorageService implements FileStorageService {
                 .bucket(bucket)
                 .key(key)
                 .build();
-        return s3Client.getObject(request);
+        try {
+            return s3Client.getObject(request);
+        } catch (SdkException e) {
+            throw new StorageUnavailableException(e);
+        }
     }
 
     @Override
@@ -50,6 +59,10 @@ public class S3FileStorageService implements FileStorageService {
                 .bucket(bucket)
                 .key(key)
                 .build();
-        s3Client.deleteObject(request);
+        try {
+            s3Client.deleteObject(request);
+        } catch (SdkException e) {
+            throw new StorageUnavailableException(e);
+        }
     }
 }
