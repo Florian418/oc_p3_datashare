@@ -14,7 +14,7 @@ Deux outils, un par écosystème :
 | Backend (Java/Gradle) | [OWASP Dependency-Check](https://owasp.org/www-project-dependency-check/) | `./gradlew dependencyCheckAnalyze` |
 | Frontend (npm) | `npm audit` (natif) | `npm audit` (dans `frontend/` et `e2e/`) |
 
-Rapport HTML généré dans `backend/build/reports/dependency-check-report.html` (non committé, généré à chaque run).
+Rapport HTML généré dans `backend/build/reports/dependency-check-report.html` (non committé, généré à chaque run). En complément de ces scans manuels, les alertes [Dependabot](https://docs.github.com/en/code-security/dependabot) de GitHub tournent en continu sur le repo (détail de la fréquence dans `MAINTENANCE.md`).
 
 **Résultat backend (dernier scan, 2026-07-15)** :
 
