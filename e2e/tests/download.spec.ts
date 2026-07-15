@@ -56,3 +56,29 @@ test('Un lien inconnu affiche un message d\'indisponibilité', async ({ page }) 
   await expect(page.getByText("n'est plus disponible")).toBeVisible();
   await expect(page.getByRole('button', { name: 'Télécharger' })).toHaveCount(0);
 });
+
+test('Téléchargement d\'un fichier déposé en étant connecté, de bout en bout', async ({ page }) => {
+  const email = `e2e_download_${crypto.randomUUID()}@example.com`;
+  const password = 'secret123';
+
+  await page.goto('/register');
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Mot de passe', { exact: true }).fill(password);
+  await page.getByLabel('Vérification du mot de passe').fill(password);
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await page.waitForURL('**/login*');
+
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Mot de passe', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Connexion' }).click();
+  await page.waitForURL('**/my-space');
+
+  const link = await uploadFile(page, 'proprietaire.png');
+
+  await page.goto(link!);
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Télécharger' }).click();
+  const download = await downloadPromise;
+
+  expect(download.suggestedFilename()).toBe('proprietaire.png');
+});
