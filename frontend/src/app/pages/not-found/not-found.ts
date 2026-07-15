@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { Header } from '../../ui/header/header';
 import { Footer } from '../../ui/footer/footer';
 import { Button } from '../../ui/button/button';
-import { Callout } from '../../ui/callout/callout';
 
 /**
  * Écran affiché pour toute route inconnue (route wildcard `**`) — pas d'écran dédié dans la
@@ -10,15 +9,16 @@ import { Callout } from '../../ui/callout/callout';
  */
 @Component({
   selector: 'app-not-found',
-  imports: [Header, Footer, Button, Callout],
+  imports: [Header, Footer, Button],
   template: `
     <div class="not-found">
       <app-header />
 
       <div class="not-found__stage">
         <div class="not-found__card">
+          <p class="not-found__code" aria-hidden="true">404</p>
           <h1 class="not-found__title">Page introuvable</h1>
-          <app-callout type="error">Cette page n'existe pas ou plus.</app-callout>
+          <p class="not-found__message">Cette page n'existe pas ou plus.</p>
           <app-button variant="primary" size="medium" [fullWidth]="true" routerLink="/">Retour à l'accueil</app-button>
         </div>
       </div>
@@ -48,21 +48,39 @@ import { Callout } from '../../ui/callout/callout';
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      gap: 24px;
-      padding: 24px;
+      align-items: center;
+      gap: 8px;
+      padding: 40px 24px;
       background-color: #ffffff;
       box-shadow: 0 0 12px 0 rgb(0 0 0 / 25%);
       border-radius: 16px;
     }
 
+    .not-found__code {
+      margin: 0;
+      font-family: var(--font-family-base);
+      font-weight: 700;
+      font-size: 80px;
+      line-height: 1;
+      color: var(--color-primary);
+    }
+
     .not-found__title {
       margin: 0;
-      width: 100%;
       text-align: center;
       font-family: var(--font-family-base);
       font-weight: 700;
       font-size: 28px;
       line-height: 40px;
+      color: #000000;
+    }
+
+    .not-found__message {
+      margin: 0 0 16px;
+      text-align: center;
+      font-family: var(--font-family-sans);
+      font-size: 16px;
+      line-height: 24px;
       color: #000000;
     }
   `,
