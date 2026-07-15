@@ -34,8 +34,8 @@ public class FileShareExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    @ExceptionHandler(ShareNotFoundException.class)
-    public ProblemDetail handleShareNotFound(ShareNotFoundException ex) {
+    @ExceptionHandler({ShareNotFoundException.class, FileNotFoundException.class})
+    public ProblemDetail handleNotFound(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 

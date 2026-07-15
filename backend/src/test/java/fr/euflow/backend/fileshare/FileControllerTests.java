@@ -21,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -164,6 +165,54 @@ class FileControllerTests {
     void list_withoutAuthentication_returns401() throws Exception {
         mockMvc.perform(get("/api/v1/files"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void delete_asOwner_removesFile() throws Exception {
+        User owner = registerUser("owner@example.com", "s3cret!!");
+        String jwt = "Bearer " + jwtService.generateToken(owner.getEmail()).value();
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(file).header(HttpHeaders.AUTHORIZATION, jwt))
+                .andExpect(status().isCreated());
+        Long fileId = fileShareRepository.findAll().getFirst().getId();
+
+        mockMvc.perform(delete("/api/v1/files/{id}", fileId).header(HttpHeaders.AUTHORIZATION, jwt))
+                .andExpect(status().isNoContent());
+
+        assertTrue(fileShareRepository.findById(fileId).isEmpty());
+    }
+
+    @Test
+    void delete_asNonOwner_returns404() throws Exception {
+        User owner = registerUser("owner@example.com", "s3cret!!");
+        String ownerJwt = "Bearer " + jwtService.generateToken(owner.getEmail()).value();
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(file).header(HttpHeaders.AUTHORIZATION, ownerJwt))
+                .andExpect(status().isCreated());
+        Long fileId = fileShareRepository.findAll().getFirst().getId();
+
+        User intruder = registerUser("intruder@example.com", "s3cret!!");
+        String intruderJwt = "Bearer " + jwtService.generateToken(intruder.getEmail()).value();
+
+        mockMvc.perform(delete("/api/v1/files/{id}", fileId).header(HttpHeaders.AUTHORIZATION, intruderJwt))
+                .andExpect(status().isNotFound());
+
+        assertTrue(fileShareRepository.findById(fileId).isPresent());
+    }
+
+    @Test
+    void delete_withoutAuthentication_returns401() throws Exception {
+        mockMvc.perform(delete("/api/v1/files/{id}", 1))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void delete_withUnknownId_returns404() throws Exception {
+        User owner = registerUser("owner@example.com", "s3cret!!");
+        String jwt = "Bearer " + jwtService.generateToken(owner.getEmail()).value();
+
+        mockMvc.perform(delete("/api/v1/files/{id}", 999_999).header(HttpHeaders.AUTHORIZATION, jwt))
+                .andExpect(status().isNotFound());
     }
 
     private User registerUser(String email, String password) {

@@ -113,6 +113,24 @@ public class FileShareService {
                 .toList();
     }
 
+    /**
+     * Supprime un fichier déposé par l'utilisateur authentifié (US06). Un {@code id} inconnu et
+     * un {@code id} appartenant à un autre utilisateur sont traités identiquement (404), pour ne
+     * jamais confirmer l'existence d'un fichier qui n'est pas le sien.
+     *
+     * @param id identifiant interne du fichier à supprimer
+     * @throws FileNotFoundException si le fichier n'existe pas ou n'appartient pas à l'appelant
+     */
+    public void delete(Long id) {
+        User owner = resolveAuthenticatedUser();
+        FileShare fileShare = fileShareRepository.findById(id)
+                .filter(candidate -> candidate.getUser() != null && candidate.getUser().getId().equals(owner.getId()))
+                .orElseThrow(FileNotFoundException::new);
+
+        fileStorageService.delete(fileShare.getToken().toString());
+        fileShareRepository.delete(fileShare);
+    }
+
     private String detectMimeType(MultipartFile file) {
         try {
             return fileTypeValidator.detectAndValidate(file.getInputStream());

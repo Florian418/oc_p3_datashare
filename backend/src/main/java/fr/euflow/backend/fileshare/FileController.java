@@ -2,7 +2,9 @@ package fr.euflow.backend.fileshare;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -56,5 +58,18 @@ public class FileController {
     @GetMapping
     public List<FileHistoryItemResponse> list() {
         return fileShareService.listForCurrentUser();
+    }
+
+    /**
+     * Supprime un fichier déposé par l'utilisateur authentifié (US06). Route protégée par
+     * défaut : un JWT valide est requis.
+     *
+     * @param id identifiant interne du fichier à supprimer
+     * @return 204 sans contenu
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        fileShareService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
