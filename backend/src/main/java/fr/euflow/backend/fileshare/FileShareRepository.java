@@ -3,6 +3,7 @@ package fr.euflow.backend.fileshare;
 import fr.euflow.backend.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,4 +24,10 @@ public interface FileShareRepository extends JpaRepository<FileShare, Long> {
      * @return les fichiers du propriétaire, du plus récent au plus ancien
      */
     List<FileShare> findByUserOrderByCreatedAtDesc(User user);
+
+    /**
+     * @param now instant de référence
+     * @return les partages dont l'expiration est dépassée (US10, purge automatique)
+     */
+    List<FileShare> findByExpiresAtBefore(Instant now);
 }
