@@ -26,7 +26,7 @@ Cette capture est prise **après** application des correctifs de la section 2 et
 
 | Projet | Vulnérabilités | Détail |
 |---|---|---|
-| `frontend/` | 3 low | `@babel/core` et `esbuild`, tous deux utilisés en interne par la chaîne de build `@angular/build` — jamais dans le bundle de production livré (`ng build` n'embarque que `dependencies`, pas `devDependencies`) |
+| `frontend/` | 0 | Corrigé, voir section 2 |
 | `e2e/` | 0 | — |
 
 ## 2. Vulnérabilités corrigées
@@ -45,12 +45,20 @@ Ces bibliothèques ne sont pas déclarées directement dans le projet — elles 
 
 Vérification post-correctif : suite backend complète relancée (`./gradlew test`), puis nouveau scan `dependencyCheckAnalyze` confirmant la disparition de ces entrées.
 
+**Frontend** : même principe côté npm, via un bloc `overrides` dans `frontend/package.json` (symétrique au `constraints { }` backend ci-dessus) — `@babel/core` et `esbuild` sont des dépendances transitives de `@angular/build`, jamais déclarées directement, jamais présentes dans le bundle de production livré (`ng build` n'embarque que `dependencies`). Ces deux CVE avaient d'abord été classées en section 3 (acceptées, raison : "aucune version 22.x corrigée n'existe encore"). C'est une alerte **Dependabot** sur GitHub (veille continue, voir section 1) qui a signalé que la raison n'était plus valable : un correctif amont existait déjà pour les deux dépendances transitives, même si `@angular/build` ne l'avait pas encore adopté lui-même — `npm audit` seul, lancé ponctuellement, n'aurait pas re-signalé le changement de disponibilité d'un correctif sur une vulnérabilité déjà classée acceptée. Correctif appliqué en conséquence :
+
+| Dépendance | CVE | Sévérité | Problème | Version cible |
+|---|---|---|---|---|
+| `@babel/core` (transitif via `@angular/build`) | GHSA-4x5r-pxfx-6jf8 | LOW | lecture arbitraire de fichier via un commentaire `sourceMappingURL` forgé | 7.29.0 → ≥7.29.6 |
+| `esbuild` (transitif via `@angular/build`/`vite`) | GHSA-g7r4-m6w7-qqqr | LOW | lecture arbitraire de fichier sur le serveur de dev, spécifique à Windows | 0.27.x/0.28.0 → ≥0.28.1 |
+
+Vérification post-correctif : `npm audit` (0 vulnérabilité), `ng build`, `ng test`, puis suite e2e complète (`npx playwright test`, 99/99 sur les 3 navigateurs) — aucune régression.
+
 ## 3. Vulnérabilités acceptées
 
 | Dépendance | CVE | Sévérité | Raison de l'acceptation |
 |---|---|---|---|
 | `swagger-ui` (webjar de `springdoc-openapi`), JS embarqué `DOMPurify@3.3.2` | 6 CVE (contournements de sanitisation XSS) | MEDIUM (~6.0) | Pas de correctif disponible : `springdoc-openapi-starter-webmvc-ui` est déjà à sa dernière version publiée (3.0.3), qui embarque cette version de `swagger-ui`/`DOMPurify`. Exposition limitée : `/swagger-ui/**` est une page de documentation technique interne (accès public par nature, comme toute doc Swagger), pas un vecteur qui manipule les données utilisateur de l'application. |
-| `frontend` (`@babel/core`, `esbuild`, via `@angular/build`) | 3 CVE low | LOW | Dépendances de la chaîne de build/dev uniquement (`devDependencies`), jamais présentes dans le bundle de production livré. Déjà sur la dernière version stable d'Angular (22.0.6) — aucune version 22.x corrigée n'existe encore à ce jour, le correctif n'existe que sur la ligne 21 (antérieure). |
 
 ## 4. Vulnérabilités ignorées (faux positifs)
 
