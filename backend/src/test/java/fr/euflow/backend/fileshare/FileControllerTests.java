@@ -402,22 +402,27 @@ class FileControllerTests {
     }
 
     @Test
-    void removeTag_asOwner_removesItAndPersists() throws Exception {
+    void removeTag_asOwner_removesOnlyTheTargetedTagAndPersists() throws Exception {
         User owner = registerUser("owner@example.com", "s3cret!!");
         String jwt = "Bearer " + jwtService.generateToken(owner.getEmail()).value();
         MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
         mockMvc.perform(multipart("/api/v1/files").file(file).header(HttpHeaders.AUTHORIZATION, jwt)
-                        .param("tags", "vacances"))
+                        .param("tags", "vacances", "famille"))
                 .andExpect(status().isCreated());
         var saved = fileShareRepository.findAll().getFirst();
         Long fileId = saved.getId();
-        Long tagId = saved.getTags().getFirst().getId();
+        // retire le 2e tag ajouté (pas le 1er) : si le filtre par id matchait n'importe quoi,
+        // findFirst() retomberait par coïncidence sur le 1er tag et le test ne le détecterait pas
+        Long familleTagId = saved.getTags().stream().filter(tag -> tag.getLabel().equals("famille")).findFirst().orElseThrow().getId();
 
-        mockMvc.perform(delete("/api/v1/files/{id}/tags/{tagId}", fileId, tagId).header(HttpHeaders.AUTHORIZATION, jwt))
+        mockMvc.perform(delete("/api/v1/files/{id}/tags/{tagId}", fileId, familleTagId).header(HttpHeaders.AUTHORIZATION, jwt))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].label").value("vacances"));
 
-        assertEquals(0, fileShareRepository.findById(fileId).orElseThrow().getTags().size());
+        var remainingTags = fileShareRepository.findById(fileId).orElseThrow().getTags();
+        assertEquals(1, remainingTags.size());
+        assertEquals("vacances", remainingTags.getFirst().getLabel());
     }
 
     @Test
