@@ -91,7 +91,10 @@ function formatFileSize(bytes: number): string {
               }
 
               <form class="file-detail__tag-form" (submit)="onAddTag($event)">
-                <app-input placeholder="Nouveau tag..." [(value)]="newTagLabel" [disabled]="addingTag()" />
+                <label class="file-detail__tag-input-label">
+                  <span class="file-detail__sr-only">Nouveau tag</span>
+                  <app-input placeholder="Nouveau tag..." [(value)]="newTagLabel" [disabled]="addingTag()" />
+                </label>
                 <app-button type="submit" variant="secondary" size="small" [disabled]="!newTagLabel().trim() || addingTag()">
                   {{ addingTag() ? 'Ajout...' : 'Ajouter' }}
                 </app-button>
@@ -232,6 +235,22 @@ function formatFileSize(bytes: number): string {
       display: flex;
       gap: 8px;
       align-items: center;
+    }
+
+    .file-detail__tag-input-label {
+      flex: 1;
+    }
+
+    .file-detail__sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
   `,
 })
