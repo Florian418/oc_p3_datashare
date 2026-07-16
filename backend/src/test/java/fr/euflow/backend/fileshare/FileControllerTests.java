@@ -12,10 +12,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -27,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -58,6 +61,9 @@ class FileControllerTests {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @AfterEach
     void cleanUp() {
@@ -296,6 +302,135 @@ class FileControllerTests {
                 .andExpect(status().isNotFound());
 
         assertTrue(fileShareRepository.findById(fileId).isPresent());
+    }
+
+    @Test
+    void detail_forOwner_returnsFileWithTags() throws Exception {
+        User owner = registerUser("owner@example.com", "s3cret!!");
+        String jwt = "Bearer " + jwtService.generateToken(owner.getEmail()).value();
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(file).header(HttpHeaders.AUTHORIZATION, jwt)
+                        .param("tags", "vacances", "famille"))
+                .andExpect(status().isCreated());
+        Long fileId = fileShareRepository.findAll().getFirst().getId();
+
+        mockMvc.perform(get("/api/v1/files/{id}", fileId).header(HttpHeaders.AUTHORIZATION, jwt))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("photo.png"))
+                .andExpect(jsonPath("$.tags.length()").value(2))
+                .andExpect(jsonPath("$.tags[0].label").value("vacances"))
+                .andExpect(jsonPath("$.tags[0].id").isNumber())
+                .andExpect(jsonPath("$.tags[1].label").value("famille"));
+    }
+
+    @Test
+    void detail_asNonOwner_returns404() throws Exception {
+        User owner = registerUser("owner@example.com", "s3cret!!");
+        String ownerJwt = "Bearer " + jwtService.generateToken(owner.getEmail()).value();
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(file).header(HttpHeaders.AUTHORIZATION, ownerJwt))
+                .andExpect(status().isCreated());
+        Long fileId = fileShareRepository.findAll().getFirst().getId();
+
+        User intruder = registerUser("intruder@example.com", "s3cret!!");
+        String intruderJwt = "Bearer " + jwtService.generateToken(intruder.getEmail()).value();
+
+        mockMvc.perform(get("/api/v1/files/{id}", fileId).header(HttpHeaders.AUTHORIZATION, intruderJwt))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void detail_withoutAuthentication_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/files/{id}", 1))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void addTag_asOwner_returnsUpdatedTagListAndPersists() throws Exception {
+        User owner = registerUser("owner@example.com", "s3cret!!");
+        String jwt = "Bearer " + jwtService.generateToken(owner.getEmail()).value();
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(file).header(HttpHeaders.AUTHORIZATION, jwt))
+                .andExpect(status().isCreated());
+        Long fileId = fileShareRepository.findAll().getFirst().getId();
+        String payload = objectMapper.writeValueAsString(new AddTagRequest("vacances"));
+
+        mockMvc.perform(post("/api/v1/files/{id}/tags", fileId).header(HttpHeaders.AUTHORIZATION, jwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].label").value("vacances"))
+                .andExpect(jsonPath("$[0].id").isNumber());
+
+        assertEquals(1, fileShareRepository.findById(fileId).orElseThrow().getTags().size());
+    }
+
+    @Test
+    void addTag_withBlankLabel_returns400() throws Exception {
+        User owner = registerUser("owner@example.com", "s3cret!!");
+        String jwt = "Bearer " + jwtService.generateToken(owner.getEmail()).value();
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(file).header(HttpHeaders.AUTHORIZATION, jwt))
+                .andExpect(status().isCreated());
+        Long fileId = fileShareRepository.findAll().getFirst().getId();
+        String payload = objectMapper.writeValueAsString(new AddTagRequest(" "));
+
+        mockMvc.perform(post("/api/v1/files/{id}/tags", fileId).header(HttpHeaders.AUTHORIZATION, jwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addTag_asNonOwner_returns404() throws Exception {
+        User owner = registerUser("owner@example.com", "s3cret!!");
+        String ownerJwt = "Bearer " + jwtService.generateToken(owner.getEmail()).value();
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(file).header(HttpHeaders.AUTHORIZATION, ownerJwt))
+                .andExpect(status().isCreated());
+        Long fileId = fileShareRepository.findAll().getFirst().getId();
+
+        User intruder = registerUser("intruder@example.com", "s3cret!!");
+        String intruderJwt = "Bearer " + jwtService.generateToken(intruder.getEmail()).value();
+        String payload = objectMapper.writeValueAsString(new AddTagRequest("vacances"));
+
+        mockMvc.perform(post("/api/v1/files/{id}/tags", fileId).header(HttpHeaders.AUTHORIZATION, intruderJwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void removeTag_asOwner_removesItAndPersists() throws Exception {
+        User owner = registerUser("owner@example.com", "s3cret!!");
+        String jwt = "Bearer " + jwtService.generateToken(owner.getEmail()).value();
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(file).header(HttpHeaders.AUTHORIZATION, jwt)
+                        .param("tags", "vacances"))
+                .andExpect(status().isCreated());
+        var saved = fileShareRepository.findAll().getFirst();
+        Long fileId = saved.getId();
+        Long tagId = saved.getTags().getFirst().getId();
+
+        mockMvc.perform(delete("/api/v1/files/{id}/tags/{tagId}", fileId, tagId).header(HttpHeaders.AUTHORIZATION, jwt))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        assertEquals(0, fileShareRepository.findById(fileId).orElseThrow().getTags().size());
+    }
+
+    @Test
+    void removeTag_withUnknownTagId_returns404() throws Exception {
+        User owner = registerUser("owner@example.com", "s3cret!!");
+        String jwt = "Bearer " + jwtService.generateToken(owner.getEmail()).value();
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_SIGNATURE);
+        mockMvc.perform(multipart("/api/v1/files").file(file).header(HttpHeaders.AUTHORIZATION, jwt))
+                .andExpect(status().isCreated());
+        Long fileId = fileShareRepository.findAll().getFirst().getId();
+
+        mockMvc.perform(delete("/api/v1/files/{id}/tags/{tagId}", fileId, 999_999).header(HttpHeaders.AUTHORIZATION, jwt))
+                .andExpect(status().isNotFound());
     }
 
     private User registerUser(String email, String password) {

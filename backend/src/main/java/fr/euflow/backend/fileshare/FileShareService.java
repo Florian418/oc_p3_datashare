@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -115,34 +116,106 @@ public class FileShareService {
     public List<FileHistoryItemResponse> listForCurrentUser() {
         User owner = resolveAuthenticatedUser();
         return fileShareRepository.findByUserOrderByCreatedAtDesc(owner).stream()
-                .map(fileShare -> new FileHistoryItemResponse(
-                        fileShare.getId(),
-                        fileShare.getToken().toString(),
-                        fileShare.getName(),
-                        fileShare.getMime(),
-                        fileShare.getSize(),
-                        fileShare.getCreatedAt(),
-                        fileShare.getExpiresAt(),
-                        fileShare.getSharePasswordHash() != null))
+                .map(this::toHistoryItem)
                 .toList();
     }
 
     /**
-     * Supprime un fichier déposé par l'utilisateur authentifié (US06). Un {@code id} inconnu et
-     * un {@code id} appartenant à un autre utilisateur sont traités identiquement (404), pour ne
-     * jamais confirmer l'existence d'un fichier qui n'est pas le sien.
+     * Supprime un fichier déposé par l'utilisateur authentifié (US06).
      *
      * @param id identifiant interne du fichier à supprimer
      * @throws FileNotFoundException si le fichier n'existe pas ou n'appartient pas à l'appelant
      */
     public void delete(Long id) {
-        User owner = resolveAuthenticatedUser();
-        FileShare fileShare = fileShareRepository.findById(id)
-                .filter(candidate -> candidate.getUser() != null && candidate.getUser().getId().equals(owner.getId()))
-                .orElseThrow(FileNotFoundException::new);
-
+        FileShare fileShare = findOwnedFileShare(id);
         fileStorageService.delete(fileShare.getToken().toString());
         fileShareRepository.delete(fileShare);
+    }
+
+    /**
+     * Détail d'un fichier déposé par l'utilisateur authentifié, tags inclus (US08).
+     *
+     * @param id identifiant interne du fichier
+     * @return le détail du fichier
+     * @throws FileNotFoundException si le fichier n'existe pas ou n'appartient pas à l'appelant
+     */
+    public FileHistoryItemResponse getDetail(Long id) {
+        return toHistoryItem(findOwnedFileShare(id));
+    }
+
+    /**
+     * Ajoute un tag à un fichier déposé par l'utilisateur authentifié (US08). Annotée
+     * {@code @Transactional} pour que la collection {@code tags} reste gérée par le même
+     * contexte de persistance de la lecture à l'écriture (nécessaire pour que
+     * l'{@code orphanRemoval} de {@link #removeTag} fonctionne de façon fiable, donc posé ici
+     * aussi par cohérence).
+     *
+     * @param id identifiant interne du fichier
+     * @param label libellé du tag (déjà validé par {@link AddTagRequest} : non vide, 50
+     *     caractères maximum)
+     * @return les tags du fichier après ajout
+     * @throws FileNotFoundException si le fichier n'existe pas ou n'appartient pas à l'appelant
+     */
+    @Transactional
+    public List<TagResponse> addTag(Long id, String label) {
+        FileShare fileShare = findOwnedFileShare(id);
+        fileShare.addTag(label.strip());
+        // flush explicite : Tag utilise GenerationType.IDENTITY, son id n'existe qu'après un
+        // vrai INSERT — sans ça, toTagResponses() sérialiserait un id encore null.
+        fileShareRepository.saveAndFlush(fileShare);
+        return toTagResponses(fileShare);
+    }
+
+    /**
+     * Retire un tag d'un fichier déposé par l'utilisateur authentifié (US08).
+     *
+     * @param id identifiant interne du fichier
+     * @param tagId identifiant du tag à retirer
+     * @return les tags du fichier après retrait
+     * @throws FileNotFoundException si le fichier n'existe pas ou n'appartient pas à l'appelant
+     * @throws TagNotFoundException si le tag n'appartient pas à ce fichier
+     */
+    @Transactional
+    public List<TagResponse> removeTag(Long id, Long tagId) {
+        FileShare fileShare = findOwnedFileShare(id);
+        Tag tag = fileShare.getTags().stream()
+                .filter(candidate -> candidate.getId().equals(tagId))
+                .findFirst()
+                .orElseThrow(TagNotFoundException::new);
+        fileShare.getTags().remove(tag);
+        return toTagResponses(fileShare);
+    }
+
+    private FileHistoryItemResponse toHistoryItem(FileShare fileShare) {
+        return new FileHistoryItemResponse(
+                fileShare.getId(),
+                fileShare.getToken().toString(),
+                fileShare.getName(),
+                fileShare.getMime(),
+                fileShare.getSize(),
+                fileShare.getCreatedAt(),
+                fileShare.getExpiresAt(),
+                fileShare.getSharePasswordHash() != null,
+                toTagResponses(fileShare));
+    }
+
+    private List<TagResponse> toTagResponses(FileShare fileShare) {
+        return fileShare.getTags().stream().map(tag -> new TagResponse(tag.getId(), tag.getLabel())).toList();
+    }
+
+    /**
+     * Résout un fichier appartenant à l'utilisateur authentifié. Un {@code id} inconnu et un
+     * {@code id} appartenant à un autre utilisateur sont traités identiquement (404), pour ne
+     * jamais confirmer l'existence d'un fichier qui n'est pas le sien.
+     *
+     * @param id identifiant interne du fichier
+     * @throws FileNotFoundException si le fichier n'existe pas ou n'appartient pas à l'appelant
+     */
+    private FileShare findOwnedFileShare(Long id) {
+        User owner = resolveAuthenticatedUser();
+        return fileShareRepository.findById(id)
+                .filter(candidate -> candidate.getUser() != null && candidate.getUser().getId().equals(owner.getId()))
+                .orElseThrow(FileNotFoundException::new);
     }
 
     private String detectMimeType(MultipartFile file) {

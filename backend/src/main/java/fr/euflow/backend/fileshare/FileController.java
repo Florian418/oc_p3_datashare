@@ -1,11 +1,13 @@
 package fr.euflow.backend.fileshare;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -71,5 +73,43 @@ public class FileController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         fileShareService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Détail d'un fichier déposé par l'utilisateur authentifié, tags inclus (US08). Route
+     * protégée par défaut : un JWT valide est requis.
+     *
+     * @param id identifiant interne du fichier
+     * @return le détail du fichier
+     */
+    @GetMapping("/{id}")
+    public FileHistoryItemResponse detail(@PathVariable Long id) {
+        return fileShareService.getDetail(id);
+    }
+
+    /**
+     * Ajoute un tag à un fichier déposé par l'utilisateur authentifié (US08). Route protégée par
+     * défaut : un JWT valide est requis.
+     *
+     * @param id identifiant interne du fichier
+     * @param request libellé du tag à ajouter
+     * @return les tags du fichier après ajout
+     */
+    @PostMapping("/{id}/tags")
+    public List<TagResponse> addTag(@PathVariable Long id, @Valid @RequestBody AddTagRequest request) {
+        return fileShareService.addTag(id, request.label());
+    }
+
+    /**
+     * Retire un tag d'un fichier déposé par l'utilisateur authentifié (US08). Route protégée par
+     * défaut : un JWT valide est requis.
+     *
+     * @param id identifiant interne du fichier
+     * @param tagId identifiant du tag à retirer
+     * @return les tags du fichier après retrait
+     */
+    @DeleteMapping("/{id}/tags/{tagId}")
+    public List<TagResponse> removeTag(@PathVariable Long id, @PathVariable Long tagId) {
+        return fileShareService.removeTag(id, tagId);
     }
 }
