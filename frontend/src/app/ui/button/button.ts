@@ -59,7 +59,6 @@ export type ButtonSize = 'small' | 'medium';
 
     .btn--full-width {
       display: flex;
-      width: 100%;
     }
 
     .btn--small {
