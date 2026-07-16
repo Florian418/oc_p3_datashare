@@ -169,7 +169,7 @@ function toFileItem(item: FileHistoryItem): FileItem {
                           </svg>
                           Supprimer
                         </app-button>
-                        <app-button variant="secondary" size="small">
+                        <app-button variant="secondary" size="small" [routerLink]="'/my-space/' + file.id">
                           Accéder
                           <svg slot="icon-end" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                             <path d="M6.03235 0.234315C5.71993 -0.078105 5.2134 -0.078105 4.90098 0.234315C4.58856 0.546734 4.58856 1.05327 4.90098 1.36568L8.20197 4.66667L0.8 4.66667C0.358172 4.66667 0 5.02484 0 5.46667C0 5.90849 0.358172 6.26667 0.8 6.26667L8.20196 6.26667L4.90098 9.56765C4.58856 9.88007 4.58856 10.3866 4.90098 10.699C5.2134 11.0114 5.71993 11.0114 6.03235 10.699L10.699 6.03235C11.0114 5.71993 11.0114 5.2134 10.699 4.90098L6.03235 0.234315L6.03235 0.234315Z" fill="currentColor" fill-rule="evenodd" transform="translate(2.533 2.533)" />
@@ -187,7 +187,7 @@ function toFileItem(item: FileHistoryItem): FileItem {
                         </summary>
                         <div class="my-space__row-menu-panel">
                           <button type="button" class="my-space__row-menu-item" (click)="requestDelete(file.id)">Supprimer</button>
-                          <button type="button" class="my-space__row-menu-item">Accéder</button>
+                          <a class="my-space__row-menu-item" [routerLink]="'/my-space/' + file.id">Accéder</a>
                         </div>
                       </details>
                     }
@@ -512,6 +512,7 @@ function toFileItem(item: FileHistoryItem): FileItem {
       border: none;
       background: transparent;
       text-align: left;
+      text-decoration: none;
       padding: 8px;
       border-radius: 4px;
       font-family: var(--font-family-sans);

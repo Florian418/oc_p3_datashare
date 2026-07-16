@@ -8,6 +8,11 @@ export interface UploadFileResponse {
   expiresAt: string;
 }
 
+export interface FileTag {
+  id: number;
+  label: string;
+}
+
 export interface FileHistoryItem {
   id: number;
   token: string;
@@ -17,6 +22,7 @@ export interface FileHistoryItem {
   createdAt: string;
   expiresAt: string;
   passwordProtected: boolean;
+  tags: FileTag[];
 }
 
 /**
@@ -58,5 +64,27 @@ export class FileShare {
    */
   delete(id: number) {
     return this.http.delete<void>(`${environment.apiUrl}/files/${id}`);
+  }
+
+  /**
+   * Détail d'un fichier, tags inclus (US08). 404 si l'id n'existe pas ou n'appartient pas à
+   * l'appelant.
+   */
+  get(id: number) {
+    return this.http.get<FileHistoryItem>(`${environment.apiUrl}/files/${id}`);
+  }
+
+  /**
+   * Ajoute un tag à un fichier (US08). Renvoie la liste des tags après ajout.
+   */
+  addTag(id: number, label: string) {
+    return this.http.post<FileTag[]>(`${environment.apiUrl}/files/${id}/tags`, { label });
+  }
+
+  /**
+   * Retire un tag d'un fichier (US08). Renvoie la liste des tags après retrait.
+   */
+  removeTag(id: number, tagId: number) {
+    return this.http.delete<FileTag[]>(`${environment.apiUrl}/files/${id}/tags/${tagId}`);
   }
 }
