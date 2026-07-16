@@ -19,7 +19,7 @@ Trois niveaux de tests, avec des responsabilités volontairement différentes :
 
 Le frontend n'a pas de suite de tests unitaires Angular/Vitest à ce jour (seul `app.spec.ts`, le test de scaffold par défaut, existe) — choix assumé plutôt qu'un oubli : la logique du frontend est majoritairement déclarative (signals, appels HTTP directs), et la couverture fonctionnelle réelle vient des tests e2e Playwright, qui exercent le vrai DOM et le vrai backend plutôt que des composants isolés avec des mocks HTTP. Limite connue : une régression purement visuelle/CSS sans impact sur le parcours testé ne serait pas détectée automatiquement.
 
-**Tests unitaires et tests d'intégration ne sont pas séparés physiquement** : les deux vivent dans `backend/src/test/java`, même package, même tâche Gradle `test` — pas de source set dédié ni de convention `*IT` façon Maven Failsafe. Choix assumé : la suite complète (54 tests JUnit) tourne en 10 à 25 secondes, largement sous le seuil où la lenteur gênerait la boucle de développement. Spring met par ailleurs en cache le contexte d'application entre les classes de test tant que la configuration ne change pas (`TestContext Framework`), ce qui explique en partie cette rapidité malgré l'usage de Testcontainers. **Seuil de bascule** : si la suite dépasse 1 à 2 minutes et commence à gêner la boucle de dev, séparation formelle via un source set Gradle dédié + convention `*IT`.
+**Tests unitaires et tests d'intégration ne sont pas séparés physiquement** : les deux vivent dans `backend/src/test/java`, même package, même tâche Gradle `test` — pas de source set dédié ni de convention `*IT` façon Maven Failsafe. Choix assumé : la suite complète (74 tests JUnit) tourne en 10 à 30 secondes, largement sous le seuil où la lenteur gênerait la boucle de développement. Spring met par ailleurs en cache le contexte d'application entre les classes de test tant que la configuration ne change pas (`TestContext Framework`), ce qui explique en partie cette rapidité malgré l'usage de Testcontainers. **Seuil de bascule** : si la suite dépasse 1 à 2 minutes et commence à gêner la boucle de dev, séparation formelle via un source set Gradle dédié + convention `*IT`.
 
 ### Tableau des tests critiques
 
@@ -31,15 +31,17 @@ Le frontend n'a pas de suite de tests unitaires Angular/Vitest à ce jour (seul 
 | Téléchargement (libre, protégé, lien invalide/expiré) | US02 | `ShareControllerTests` (12 cas : métadonnées, authenticate, download, token d'un autre partage) | `download.spec.ts` (téléchargement réel libre/protégé/authentifié, mauvais mot de passe, lien inconnu) |
 | Historique (US05) | US05 | `FileControllerTests` (isolation par propriétaire, tri, 401 sans auth) | `history.spec.ts` (fichiers déposés visibles dans Mon espace, filtre Actifs/Expiré) |
 | Suppression (US06) | US06 | `FileControllerTests` (propriétaire, non-propriétaire → 404, fichier anonyme → 404, id inconnu → 404) | `delete.spec.ts` (suppression confirmée + persistance après reload, annulation) |
+| Purge automatique des fichiers expirés | US10 | `PurgeExpiredFilesTaskTests` (tâche planifiée, 2 cas : fichiers expirés supprimés du stockage et de la base, aucun fichier expiré → rien supprimé) | — (tâche de fond, pas de parcours utilisateur direct) |
+| Tags (détail fichier, ajout/retrait, filtrage historique) | US08 | `FileControllerTests` (détail propriétaire/non-propriétaire/non-authentifié, ajout de tag, tag vide → 400, retrait ciblé sans affecter les autres tags — cas ajouté après un mutant PIT survivant, voir plus bas) | `file-detail.spec.ts` (accès via "Accéder", ajout/retrait de tag, téléchargement depuis le détail), `history.spec.ts` (filtrage par tag dans Mon espace) |
 | Accessibilité (WCAG AA) | — | — | `accessibility.spec.ts` (axe-core, 6 routes × 2 viewports, 0 violation hors le contraste des boutons — voir note ci-dessous) |
 | Navigation | — | — | `navigation.spec.ts` |
 
-### Résultats — dernière exécution (2026-07-15)
+### Résultats — dernière exécution (2026-07-16)
 
-- **54/54 tests JUnit verts** (unitaires + intégration, `./gradlew test`).
-- **87/87 tests e2e verts** (29 scénarios uniques × 3 navigateurs Chromium/Firefox/WebKit, `npx playwright test`) :
+- **74/74 tests JUnit verts** (unitaires + intégration, `./gradlew test`).
+- **99/99 tests e2e verts** (33 scénarios uniques × 3 navigateurs Chromium/Firefox/WebKit, `npx playwright test`) :
 
-  ![Rapport Playwright — 87/87 tests passés](img/testing/e2e-playwright-report.png)
+  ![Rapport Playwright — 99/99 tests passés](img/testing/e2e-playwright-report.png)
 
 - **0 violation axe-core** (36/36 tests verts : 6 routes × 2 viewports × 3 navigateurs), à une exception près : la règle `color-contrast` est désactivée volontairement dans l'audit (`accessibility.spec.ts`). Le texte des boutons Primary/Secondary/Tertiary reprend les couleurs exactes de la maquette source (ex. `#E27F29` sur fond clair, ratio ~2.5:1, sous le seuil AA de 4.5:1) — écart hérité de la charte graphique fournie, pas d'une décision d'implémentation. Limitation connue et assumée pour ce MVP, corrigible en un changement de variable CSS (couleurs centralisées en custom properties) si retravaillée en v1.1.
 
@@ -50,6 +52,7 @@ Le frontend n'a pas de suite de tests unitaires Angular/Vitest à ce jour (seul 
 - **`Content-Disposition` incompatible WebKit/Safari** : un run e2e multi-navigateurs (`download.spec.ts` sur Chromium/Firefox/WebKit) a révélé que WebKit ignorait `filename*=UTF-8''...` seul et retombait sur un nom de fichier générique. Invisible sur Chromium/Firefox, détecté uniquement parce que la suite tourne sur les 3 moteurs.
 - **Précision du JWT (`expiresAt`)** : un test unitaire (`JwtServiceTests`) comparant l'`Instant` d'origine à la valeur décodée du claim `exp` a révélé qu'un JWT encode l'expiration en secondes (RFC 7519), perdant les sous-secondes — corrigé en tronquant `expiresAt` dès l'émission, pas seulement dans le test.
 - **Rejet des fichiers >1 Go jamais exercé** : le rapport de couverture JaCoCo a signalé `FileTooLargeException` à 0 % — la vraie limite métier n'était testée nulle part. Ajout d'un test unitaire dédié (`FileShareServiceTests`) plutôt qu'un test d'intégration avec un vrai payload de 1 Go, jugé trop coûteux pour la suite.
+- **Retrait de tag non discriminant (US08)** : le mutation testing (PIT, voir section 3) a révélé que le test initial de `DELETE /files/{id}/tags/{tagId}` ne distinguait pas "filtre correctement par id" de "matche n'importe quel tag" — le fichier de test n'avait qu'un seul tag, donc peu importe la logique de filtrage, le résultat observé était identique. La couverture de code (JaCoCo) ne l'avait pas détecté : la ligne était bien exécutée, juste pas exercée avec des données discriminantes. Corrigé en testant sur un fichier à 2 tags et en ciblant le second (pas le premier), pour que toute erreur de filtrage devienne visible.
 
 ### Critères d'acceptation
 
@@ -78,4 +81,12 @@ Toutes les fonctionnalités critiques du MVP (upload, téléchargement, authenti
 
 ![Rapport de couverture JaCoCo](img/testing/coverage-backend-jacoco.png)
 
-**96 % du code backend est couvert par les tests.**
+**97 % des instructions et 87 % des branches du code backend sont couvertes par les tests** (JaCoCo, `./gradlew test jacocoTestReport`).
+
+### Bonus — mutation testing (PIT)
+
+La couverture de lignes/branches dit seulement si une ligne a été *exécutée*, pas si elle a été *vérifiée* (un test qui appelle du code sans jamais faire d'assertion dessus compte comme "couvert"). PIT modifie automatiquement le bytecode compilé (ex. inverser une condition, changer une valeur de retour) et vérifie que la suite de tests détecte chaque mutation ("tue le mutant") — un filet contre des tests trop permissifs, notamment ceux écrits avec l'aide de l'IA.
+
+![Rapport PIT — mutation testing](img/testing/pitest-mutation-report.png)
+
+**89 % de mutation coverage (119/134), 91 % de test strength (119/131)**, `./gradlew pitest`. Exemple concret trouvé grâce à cet outil : voir "Retrait de tag non discriminant" dans la section [Anomalies détectées et corrigées grâce aux tests](#anomalies-détectées-et-corrigées-grâce-aux-tests) ci-dessus.
