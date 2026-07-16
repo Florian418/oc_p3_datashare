@@ -2,6 +2,7 @@ import { Component, ElementRef, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Button } from '../../ui/button/button';
 import { Switch, SwitchOption } from '../../ui/switch/switch';
+import { Input } from '../../ui/input/input';
 import { FileShare, FileHistoryItem } from '../../fileshare/fileshare';
 import { Auth } from '../../auth/auth';
 
@@ -15,6 +16,7 @@ interface FileItem {
   status: FileStatus;
   expiresLabel: string;
   protected: boolean;
+  tags: string[];
 }
 
 function fileTypeFromMime(mime: string): FileType {
@@ -36,6 +38,7 @@ function toFileItem(item: FileHistoryItem): FileItem {
     status: expired ? 'expired' : 'active',
     expiresLabel,
     protected: item.passwordProtected,
+    tags: item.tags.map((tag) => tag.label),
   };
 }
 
@@ -45,7 +48,7 @@ function toFileItem(item: FileHistoryItem): FileItem {
  */
 @Component({
   selector: 'app-my-space',
-  imports: [RouterLink, Button, Switch],
+  imports: [RouterLink, Button, Switch, Input],
   host: {
     '(document:click)': 'closeMenusOutside($event)',
   },
@@ -115,7 +118,13 @@ function toFileItem(item: FileHistoryItem): FileItem {
         <div class="my-space__body">
           <h1 class="my-space__title">Mes fichiers</h1>
 
-          <app-switch [options]="filterOptions" [(value)]="filter" ariaLabel="Filtrer les fichiers" />
+          <div class="my-space__filters">
+            <app-switch [options]="filterOptions" [(value)]="filter" ariaLabel="Filtrer les fichiers" />
+            <label class="my-space__tag-filter-label">
+              <span class="my-space__sr-only">Filtrer par tag</span>
+              <app-input placeholder="Filtrer par tag..." [(value)]="tagFilter" />
+            </label>
+          </div>
 
           <ul class="my-space__list">
             @for (file of filteredFiles(); track file.id) {
@@ -139,6 +148,9 @@ function toFileItem(item: FileHistoryItem): FileItem {
                   <span class="my-space__row-status" [class.my-space__row-status--expired]="file.status === 'expired'">
                     {{ file.expiresLabel }}
                   </span>
+                  @if (file.tags.length > 0) {
+                    <span class="my-space__row-tags">{{ file.tags.join(', ') }}</span>
+                  }
                 </div>
 
                 @if (file.status === 'expired') {
@@ -380,6 +392,30 @@ function toFileItem(item: FileHistoryItem): FileItem {
       color: #000000;
     }
 
+    .my-space__filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .my-space__tag-filter-label {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .my-space__sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     .my-space__list {
       list-style: none;
       margin: 0;
@@ -429,6 +465,13 @@ function toFileItem(item: FileHistoryItem): FileItem {
 
     .my-space__row-status--expired {
       color: #c62020;
+    }
+
+    .my-space__row-tags {
+      font-family: var(--font-family-sans);
+      font-size: 14px;
+      line-height: 16px;
+      color: rgb(0 0 0 / 60%);
     }
 
     .my-space__row-expired-note {
@@ -607,6 +650,7 @@ export class MySpace {
 
   protected drawerOpen = signal(false);
   protected filter = signal('tous');
+  protected tagFilter = signal('');
 
   protected filterOptions: SwitchOption[] = [
     { value: 'tous', label: 'Tous' },
@@ -618,9 +662,11 @@ export class MySpace {
 
   protected filteredFiles = computed(() => {
     const filter = this.filter();
-    const files = this.files();
-    if (filter === 'actifs') return files.filter((file) => file.status === 'active');
-    if (filter === 'expire') return files.filter((file) => file.status === 'expired');
+    const tagFilter = this.tagFilter().trim().toLowerCase();
+    let files = this.files();
+    if (filter === 'actifs') files = files.filter((file) => file.status === 'active');
+    if (filter === 'expire') files = files.filter((file) => file.status === 'expired');
+    if (tagFilter) files = files.filter((file) => file.tags.some((tag) => tag.toLowerCase().includes(tagFilter)));
     return files;
   });
 

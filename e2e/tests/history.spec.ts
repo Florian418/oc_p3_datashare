@@ -64,3 +64,33 @@ test('Le filtre Actifs/Expiré s\'applique à la liste réelle', async ({ page }
   await page.getByRole('button', { name: 'Expiré' }).click();
   await expect(page.locator('.my-space__row', { hasText: 'actif.png' })).toHaveCount(0);
 });
+
+test('Le filtre par tag limite la liste aux fichiers correspondants (facultatif, US08)', async ({ page }) => {
+  const email = `e2e_history_${crypto.randomUUID()}@example.com`;
+  await registerAndLogin(page, email, 'secret123');
+
+  await page.goto('/');
+  await selectFile(page, { name: 'alpha.png', mimeType: 'image/png', buffer: PNG_BUFFER });
+  await page.getByRole('button', { name: 'Téléverser' }).click();
+  await expect(page.getByText('Félicitations')).toBeVisible();
+
+  await page.goto('/');
+  await selectFile(page, { name: 'beta.png', mimeType: 'image/png', buffer: PNG_BUFFER });
+  await page.getByRole('button', { name: 'Téléverser' }).click();
+  await expect(page.getByText('Félicitations')).toBeVisible();
+
+  await page.goto('/my-space');
+  const taggedRow = page.locator('.my-space__row', { hasText: 'alpha.png' });
+  await taggedRow.locator('.my-space__row-buttons').getByRole('link', { name: 'Accéder' }).click();
+  await page.getByLabel('Nouveau tag').fill('vacances');
+  await page.getByRole('button', { name: 'Ajouter' }).click();
+  await expect(page.locator('.file-detail__tag', { hasText: 'vacances' })).toBeVisible();
+
+  await page.goto('/my-space');
+  await expect(page.locator('.my-space__row', { hasText: 'alpha.png' })).toBeVisible();
+  await expect(page.locator('.my-space__row', { hasText: 'beta.png' })).toBeVisible();
+
+  await page.getByLabel('Filtrer par tag').fill('vacances');
+  await expect(page.locator('.my-space__row', { hasText: 'alpha.png' })).toBeVisible();
+  await expect(page.locator('.my-space__row', { hasText: 'beta.png' })).toHaveCount(0);
+});
