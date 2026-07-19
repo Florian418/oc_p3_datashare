@@ -233,6 +233,7 @@ function formatFileSize(bytes: number): string {
 
     .file-detail__tag-form {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       align-items: center;
     }

@@ -156,7 +156,7 @@ function toFileItem(item: FileHistoryItem): FileItem {
                 @if (file.status === 'expired') {
                   <span class="my-space__row-expired-note">Ce fichier a expiré, il n'est plus stocké chez nous</span>
                 } @else {
-                  <div class="my-space__row-actions">
+                  <div class="my-space__row-actions" [class.my-space__row-actions--confirming]="confirmingDeleteId() === file.id">
                     @if (file.protected) {
                       <svg class="my-space__lock" width="13.6" height="14.933" viewBox="0 0 13.6 14.933" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                         <path d="M10.9333 4.13333L10.9333 6L11.4667 6C12.6449 6 13.6 6.95513 13.6 8.13333L13.6 12.8C13.6 13.9782 12.6449 14.9333 11.4667 14.9333L2.13333 14.9333C0.955126 14.9333 0 13.9782 0 12.8L0 8.13333C0 6.95513 0.955126 6 2.13333 6L2.66667 6L2.66667 4.13333C2.66667 3.03711 3.10214 1.98578 3.87729 1.21062C4.65244 0.435475 5.70377 0 6.8 0C7.89623 0 8.94756 0.435475 9.72271 1.21062C10.4979 1.98578 10.9333 3.03711 10.9333 4.13333L10.9333 4.13333ZM5.00866 2.342C5.48375 1.8669 6.12812 1.6 6.8 1.6C7.47188 1.6 8.11624 1.8669 8.59134 2.342C9.06643 2.81709 9.33333 3.46145 9.33333 4.13333L9.33333 6L4.26667 6L4.26667 4.13333C4.26667 3.46145 4.53357 2.81709 5.00866 2.342L5.00866 2.342ZM2.13333 7.6L11.4667 7.6C11.7612 7.6 12 7.83878 12 8.13333L12 12.8C12 13.0946 11.7612 13.3333 11.4667 13.3333L2.13333 13.3333C1.83878 13.3333 1.6 13.0946 1.6 12.8L1.6 8.13333C1.6 7.83878 1.83878 7.6 2.13333 7.6L2.13333 7.6Z" fill="#1E1E1E" fill-rule="evenodd" />
@@ -427,6 +427,7 @@ function toFileItem(item: FileHistoryItem): FileItem {
 
     .my-space__row {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 16px;
       padding: 16px 8px;
@@ -441,7 +442,7 @@ function toFileItem(item: FileHistoryItem): FileItem {
 
     .my-space__row-info {
       flex: 1;
-      min-width: 0;
+      min-width: 140px;
       display: flex;
       flex-direction: column;
     }
@@ -483,6 +484,11 @@ function toFileItem(item: FileHistoryItem): FileItem {
       display: flex;
       align-items: center;
       gap: 12px;
+    }
+
+    .my-space__row-actions--confirming {
+      flex-basis: 100%;
+      justify-content: flex-end;
     }
 
     .my-space__row-buttons {
@@ -638,6 +644,11 @@ function toFileItem(item: FileHistoryItem): FileItem {
 
       .my-space__row-menu {
         display: none;
+      }
+
+      .my-space__row-actions--confirming {
+        flex-basis: auto;
+        justify-content: flex-start;
       }
     }
   `,
