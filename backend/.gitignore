@@ -39,3 +39,6 @@ out/
 ### Env ###
 .env
 garage.toml
+
+### Sauvegardes DB (voir MAINTENANCE.md) ###
+*.sql

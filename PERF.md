@@ -2,6 +2,7 @@
 
 1. [Test de charge backend (k6)](#1-test-de-charge-backend-k6)
 2. [Journalisation des métriques clés](#2-journalisation-des-métriques-clés)
+3. [Budget de performance front et métriques navigateur](#3-budget-de-performance-front-et-métriques-navigateur)
 
 ## 1. Test de charge backend (k6)
 
@@ -78,3 +79,50 @@ Et au téléchargement :
 ```
 
 Sortie en stdout uniquement (pas de fichier de log), format JSON directement exploitable par un agrégateur de logs (ELK, Grafana Loki...) sans parsing de texte libre — permet en théorie des requêtes du type "taille moyenne des fichiers uploadés", "% de partages protégés par mot de passe", ou de corréler taille et durée sur un historique réel, au-delà du seul test de charge synthétique de la section 1.
+
+## 3. Budget de performance front et métriques navigateur
+
+**Budget Angular** : seuils de taille vérifiés automatiquement à chaque build (`frontend/angular.json`, valeurs par défaut du scaffold `ng new`, jamais retouchées) — 500kB/1MB pour le bundle initial, 4kB/8kB pour le style d'un composant isolé.
+
+```
+cd frontend
+ng build --configuration production
+```
+
+Résultat (2026-07-18) : bundle initial 324.63 kB brut / 83.49 kB transféré (compressé) — largement sous le seuil de 500kB. Un warning réel capturé sur le budget par composant :
+
+```
+▲ [WARNING] angular:styles/component:scss;...;my-space.ts exceeded maximum budget.
+Budget 4.00 kB was not met by 1.78 kB with a total of 5.78 kB.
+```
+
+`my-space.ts` est l'écran le plus riche du projet (sidebar/drawer/topbar/liste filtrable) — logique qu'il ait plus de CSS que les autres écrans. Warning non bloquant, build réussi.
+
+**Lighthouse contre le build de prod** (servi statique, pas le serveur de dev — un premier audit en dev au commit 19 avait donné un score Performance jugé non représentatif) :
+
+```
+cd frontend
+ng build --configuration production
+npx http-server dist/frontend/browser -p 4200
+```
+
+Puis, depuis `e2e/` (backend réel lancé en parallèle) :
+
+```
+npx lighthouse http://localhost:4200/ --view --output-path="../docs/tmp/lighthouse-report.html" --only-categories=performance,accessibility,best-practices,seo
+```
+
+| Catégorie | Score (build de prod) | Score (dev, commit 19) |
+|---|---|---|
+| Performance | **87/100** | 56/100 (non représentatif) |
+| Accessibilité | 100/100 | 100/100 |
+| Bonnes pratiques | 100/100 | 100/100 |
+| SEO | 100/100 | 90/100 |
+
+Core Web Vitals : LCP 3.2s, TBT 10ms, CLS 0.001, FCP/Speed Index ~3.1s.
+
+**Interprétation** :
+- Le score Performance grimpe de 56 à 87 entre un serveur de dev (code non minifié) et un vrai build de prod — confirme que la mesure du commit 19 n'était effectivement pas représentative.
+- Le principal point qui empêche un score de 100 : **JavaScript inutilisé**. Sur les 313.1 KiB transférés du bundle principal, 109.4 KiB (~35%) ne sont jamais utilisés sur la page chargée.
+- Cause identifiée : les 5 écrans (Upload/Login/Register/Download/MySpace) sont tous bundlés dans un seul chunk initial — aucun lazy loading par route implémenté, alors que c'est une pratique Angular recommandée (`frontend/.claude/CLAUDE.md`, "implement lazy loading for feature routes"). Charger l'écran Upload télécharge et exécute aussi le code des 4 autres écrans.
+- Impact modéré pour un MVP à 5 écrans (score déjà à 87/100) — limite honnête à documenter plutôt qu'à ignorer, dans la même logique que les autres points de vigilance déjà assumés sur ce projet (contraste de couleurs, icônes génériques).

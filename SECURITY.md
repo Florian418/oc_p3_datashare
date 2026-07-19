@@ -58,7 +58,7 @@ Vérification post-correctif : `npm audit` (0 vulnérabilité), `ng build`, `ng 
 
 | Dépendance | CVE | Sévérité | Raison de l'acceptation |
 |---|---|---|---|
-| `swagger-ui` (webjar de `springdoc-openapi`), JS embarqué `DOMPurify@3.3.2` | 6 CVE (contournements de sanitisation XSS) | MEDIUM (~6.0) | Pas de correctif disponible : `springdoc-openapi-starter-webmvc-ui` est déjà à sa dernière version publiée (3.0.3), qui embarque cette version de `swagger-ui`/`DOMPurify`. Exposition limitée : `/swagger-ui/**` est une page de documentation technique interne (accès public par nature, comme toute doc Swagger), pas un vecteur qui manipule les données utilisateur de l'application. |
+| `swagger-ui` (webjar de `springdoc-openapi`), JS embarqué `DOMPurify@3.3.2` | 12 CVE (contournements de sanitisation XSS) | MEDIUM (~6.0) | Pas de correctif disponible : `springdoc-openapi-starter-webmvc-ui` est déjà à sa dernière version publiée (3.0.3), qui embarque cette version de `swagger-ui`/`DOMPurify`. Exposition limitée : `/swagger-ui/**` est une page de documentation technique interne (accès public par nature, comme toute doc Swagger), pas un vecteur qui manipule les données utilisateur de l'application. |
 
 ## 4. Vulnérabilités ignorées (faux positifs)
 
